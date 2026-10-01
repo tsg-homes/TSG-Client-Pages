@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Buyer / Seller Intake - The Stawasz Group</title>
+<base target="_top">
+<!-- TSG Design System for the Apps Script form pages (2026-10-01, per Durand).
+     Tokens and component rules come from the TSG Design System artifact
+     (project/tokens.json, project/components/bundle.css); the form-control
+     rules below are this project's own, built on those tokens. Included in
+     every page's <head> via the include('Styles') scriptlet. Light and dark themes
+     follow the viewer's system setting; style through the tokens only. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand: #15464A; --brand-ink: #FFFFFF; --brand-deep: #0D3134; --brand-tint: #E3EDED;
+    --heading: #15464A; --ground: #F1F1F1; --surface: #FFFFFF; --input: #F3F3F3;
+    --line: #CCCCCC; --line-soft: #E2E6E6; --gray-dark: #999999;
+    --ink: #0F2426; --ink-2: #3E4F50; --muted: #5A6A6B; --on-band-muted: #BCD6D4;
+    --good: #1F7A4D; --good-bg: #E4F2EA; --warn: #B4541F; --warn-ink: #9A4418; --warn-bg: #FBEBDF;
+    --critical: #B3261E; --critical-bg: #FBE4E2;
+    --font-sans: Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'Roboto Mono', ui-monospace, Menlo, monospace;
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px;
+    --space-8: 32px; --space-10: 40px; --space-14: 56px; --space-20: 80px;
+    --radius-sm: 4px; --radius-md: 8px; --radius-pill: 999px;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --brand: #0F3A3D; --brand-ink: #E8F1F1; --brand-deep: #0A2A2C; --brand-tint: #1B3A3D;
+      --heading: #9FD3D6; --ground: #0C1A1C; --surface: #12262A; --input: #17302F;
+      --line: #2E4A4D; --line-soft: #223B3E; --gray-dark: #5E7374;
+      --ink: #E6EEEE; --ink-2: #C3D2D3; --muted: #9FB3B4; --on-band-muted: #A9C9C8;
+      --good: #5CC48E; --good-bg: #15392A; --warn: #E89A66; --warn-ink: #E89A66; --warn-bg: #3A2619;
+      --critical: #F08A82; --critical-bg: #3D1C1A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --brand: #0F3A3D; --brand-ink: #E8F1F1; --brand-deep: #0A2A2C; --brand-tint: #1B3A3D;
+    --heading: #9FD3D6; --ground: #0C1A1C; --surface: #12262A; --input: #17302F;
+    --line: #2E4A4D; --line-soft: #223B3E; --gray-dark: #5E7374;
+    --ink: #E6EEEE; --ink-2: #C3D2D3; --muted: #9FB3B4; --on-band-muted: #A9C9C8;
+    --good: #5CC48E; --good-bg: #15392A; --warn: #E89A66; --warn-ink: #E89A66; --warn-bg: #3A2619;
+    --critical: #F08A82; --critical-bg: #3D1C1A;
+  }
+
+  /* Base */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body.tsg { font-family: var(--font-sans); color: var(--ink); background: var(--ground); font-size: 15px; line-height: 1.5;
+    min-height: 100vh; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
+  .tsg-mono { font-family: var(--font-mono); font-weight: 500; font-variant-numeric: tabular-nums; }
+  a { color: var(--heading); }
+  a:hover { color: var(--brand-deep); }
+
+  /* Header band (Design System component) */
+  .tsg-band { background: var(--brand); color: var(--brand-ink); padding: var(--space-10) var(--space-20) var(--space-8);
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: var(--space-4) var(--space-10); }
+  .tsg-band__eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--on-band-muted); margin: 0 0 var(--space-2); }
+  .tsg-band__title { margin: 0; font-size: 44px; line-height: 1.1; font-weight: 900; letter-spacing: -.01em; text-wrap: balance; }
+  .tsg-band__sub { margin: var(--space-2) 0 0; font-size: 15px; color: var(--on-band-muted); }
+  .tsg-band__meta { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-2); font-size: 13px; }
+  .tsg-band__chips { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: flex-end; }
+  .tsg-band__chip { padding: 4px 10px; border-radius: var(--radius-pill); background: var(--brand-deep); color: var(--brand-ink); font-size: 12px; font-weight: 500; }
+  @media (max-width: 600px) {
+    .tsg-band { padding: var(--space-6) var(--space-4) var(--space-5); }
+    .tsg-band__title { font-size: 28px; }
+    .tsg-band__meta { align-items: flex-start; }
+    .tsg-band__chips { justify-content: flex-start; }
+  }
+
+  /* Footer (Design System component). Client-facing pages omit it. */
+  .tsg-footer { margin-top: auto; background: var(--brand); color: var(--brand-ink); padding: 14px var(--space-4); text-align: center;
+    font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+
+  /* Page frame: 90% of the screen width, centered; full width with a 16px gutter on phones. */
+  .tsg-page { width: 90%; max-width: 1400px; margin: 0 auto; padding: var(--space-8) 0 var(--space-14); flex: 1 0 auto; }
+  @media (max-width: 600px) { .tsg-page { width: 100%; padding: var(--space-5) var(--space-4) var(--space-8); } }
+  /* A form column stays readable inside the frame. */
+  .tsg-form { max-width: 760px; }
+  .tsg-intro { font-size: 15px; color: var(--ink-2); margin: 0 0 var(--space-5); max-width: 760px; }
+  .tsg-intro strong { color: var(--heading); }
+
+  /* Section label (Design System component) */
+  .tsg-section { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-4); margin: var(--space-8) 0 var(--space-4); }
+  .tsg-section__label { margin: 0; font-size: 14px; line-height: 20px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: var(--heading); }
+  .tsg-section__note { font-size: 14px; color: var(--muted); }
+  .tsg-section--rule { border-bottom: 2px solid var(--heading); padding-bottom: 6px; }
+  @media (max-width: 600px) { .tsg-section__label { font-size: 12px; } }
+
+  /* Callout (Design System component) */
+  .tsg-callout { background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--radius-md); padding: var(--space-5) var(--space-6);
+    display: grid; grid-template-columns: auto 1fr; gap: var(--space-1) var(--space-3); align-items: start; margin: 0 0 var(--space-5); max-width: 760px; }
+  .tsg-callout__tag { grid-row: span 2; font-size: 11px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: var(--brand-ink);
+    background: var(--brand); border-radius: var(--radius-sm); padding: 4px 8px; line-height: 16px; }
+  .tsg-callout__title { margin: 0; font-size: 15px; font-weight: 700; color: var(--ink); }
+  .tsg-callout__body { margin: 0; font-size: 14px; line-height: 1.55; color: var(--ink-2); }
+  .tsg-callout--warn { background: var(--warn-bg); border-color: var(--warn-bg); }
+  .tsg-callout--warn .tsg-callout__tag { background: var(--warn-ink); color: var(--surface); }
+  .tsg-callout--warn .tsg-callout__title, .tsg-callout--warn .tsg-callout__body { color: var(--warn-ink); }
+
+  /* Status pill (Design System component) */
+  .tsg-pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 700; line-height: 18px; white-space: nowrap; }
+  .tsg-pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .tsg-pill--good { background: var(--good-bg); color: var(--good); }
+  .tsg-pill--warn { background: var(--warn-bg); color: var(--warn-ink); }
+  .tsg-pill--critical { background: var(--critical-bg); color: var(--critical); }
+  .tsg-pill--neutral { background: var(--input); color: var(--ink-2); }
+
+  /* Form controls (this project's rules, on the system tokens) */
+  .field { background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--radius-md); padding: var(--space-4) var(--space-5); margin-bottom: var(--space-3); }
+  label.qlabel, .qlabel { display: block; font-weight: 700; font-size: 14px; color: var(--ink); margin-bottom: var(--space-2); }
+  .req { color: var(--critical); }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.45; }
+  .hint--err { color: var(--critical); }
+  .hint--warn { color: var(--warn-ink); }
+  input[type=text], input[type=email], input[type=tel], input[type=date], input[type=number], input[type=url], select, textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--input); color: var(--ink);
+    font-family: var(--font-sans); font-size: 15px; line-height: 1.4; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--heading); outline-offset: 1px; }
+  input[readonly] { background: var(--surface); color: var(--ink-2); }
+  input[type=file] { width: 100%; padding: 8px 0; font-family: var(--font-sans); font-size: 14px; color: var(--ink-2); }
+  textarea { min-height: 64px; resize: vertical; }
+  .opt { display: flex; align-items: center; gap: var(--space-2); margin: 6px 0; font-size: 15px; color: var(--ink); }
+  .opt input { width: auto; margin: 0; }
+  .opt-other { display: flex; align-items: center; gap: var(--space-2); margin: 6px 0; font-size: 15px; }
+  .opt-other input[type=text] { flex: 1; }
+  .opt-other input[type=radio], .opt-other input[type=checkbox] { width: auto; margin: 0; }
+  .lookup-row { display: flex; gap: var(--space-2); }
+  .lookup-row input { flex: 1; }
+  .tsg-btn { font-family: var(--font-sans); font-weight: 700; font-size: 14px; border: 1px solid var(--brand); border-radius: var(--radius-md);
+    padding: 10px 16px; cursor: pointer; background: var(--brand); color: var(--brand-ink); white-space: nowrap; }
+  .tsg-btn:hover { background: var(--brand-deep); border-color: var(--brand-deep); }
+  .tsg-btn:disabled { opacity: .6; cursor: not-allowed; }
+  .tsg-btn--ghost { background: var(--surface); color: var(--heading); border-color: var(--heading); }
+  .tsg-btn--ghost:hover { background: var(--brand-tint); color: var(--heading); border-color: var(--heading); }
+  .tsg-btn--sm { font-size: 12px; padding: 5px 10px; border-radius: var(--radius-sm); }
+  .tsg-btn--submit { width: 100%; font-size: 16px; padding: 14px; margin-top: var(--space-3); }
+  .tsg-btn--submit:disabled { opacity: .6; }
+  .fub-result-card { border: 1px solid var(--line-soft); border-radius: var(--radius-md); padding: 10px 12px; margin-top: var(--space-2); background: var(--surface); }
+  .fub-result-name { font-weight: 700; color: var(--ink); font-size: 14px; }
+  .fub-result-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .fub-result-actions { margin-top: var(--space-2); display: flex; gap: var(--space-2); }
+  .contact-confirmed { background: var(--brand-tint); border: 1px solid var(--heading); border-radius: var(--radius-md); padding: 10px 12px; margin-top: var(--space-2);
+    font-size: 14px; color: var(--ink); display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; }
+  .contact-confirmed strong { color: var(--heading); }
+  .locked { opacity: .45; pointer-events: none; }
+  .tsg-msg { display: none; padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-5); font-size: 14px; max-width: 760px; }
+  .tsg-msg--ok { background: var(--good-bg); color: var(--good); border: 1px solid var(--good); }
+  .tsg-msg--err { background: var(--critical-bg); color: var(--critical); border: 1px solid var(--critical); }
+  .file-list { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .link-cards { display: grid; gap: var(--space-3); max-width: 760px; }
+  a.tsg-card { display: block; background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--radius-md); padding: var(--space-4) var(--space-5);
+    text-decoration: none; color: inherit; }
+  a.tsg-card:hover, a.tsg-card:focus { border-color: var(--heading); outline: none; }
+  a.tsg-card .name { font-weight: 700; font-size: 15px; color: var(--heading); }
+  a.tsg-card .desc { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+  /* QA test banner and page-load notice (status colors only; never yellow). */
+  #qaTestBanner { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 99999; background: var(--critical); color: #FFFFFF;
+    font-family: var(--font-sans); font-size: 14px; font-weight: 700; letter-spacing: .03em; text-align: center; padding: 10px 14px; }
+  #pageLoadError { display: none; width: 90%; max-width: 760px; margin: var(--space-5) auto 0; padding: 14px 18px; background: var(--critical-bg);
+    border: 1px solid var(--critical); border-radius: var(--radius-md); color: var(--critical); font-family: var(--font-sans); font-size: 14px; line-height: 1.45; }
+</style>
+
+<style>
+  /* Page-specific rules only; everything else comes from Styles.html.
+     Pill-style choice groups and the Buying/Selling role switch, on the
+     design-system tokens. */
+  .choice-group { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .choice-group label {
+    display: flex; align-items: center; gap: 6px; cursor: pointer;
+    border: 1px solid var(--line); border-radius: var(--radius-pill);
+    padding: 7px 14px; font-size: 14px; font-weight: 400;
+    background: var(--input); color: var(--ink);
+  }
+  .choice-group input { width: auto; margin: 0; }
+  .choice-group label:has(input:checked) { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+  .role-group label { flex: 1; justify-content: center; font-weight: 700; font-size: 15px; padding: 14px; border-radius: var(--radius-md); }
+  .other-input { margin-top: var(--space-2); display: none; }
+  /* 2026-09-07 (audit fix, M11): honeypot, copied from OpenHouseForm.html --
+     positioned off-screen rather than display:none so a form-filling bot
+     still sees and fills it. */
+  #website { position: absolute; left: -9999px; top: -9999px; }
+  .toggle-cobuyer { margin: var(--space-2) 0 var(--space-3); }
+  #buyer2-fields, #seller2-fields { display: none; }
+  #renting-subfields, #preapproved-subfields { display: none; }
+  #buyer-section, #seller-section { display: none; }
+  .consent-row { display: flex; align-items: flex-start; gap: var(--space-2); }
+  .consent-row input { width: auto; margin: 3px 0 0; flex: 0 0 auto; }
+  .consent-row label { font-weight: 400; font-size: 13px; line-height: 1.5; color: var(--ink-2); }
+  .notice-text { margin: 0 0 var(--space-3); font-size: 14px; line-height: 1.55; color: var(--ink-2); }
+  #status-msg { margin-top: var(--space-3); margin-bottom: 0; text-align: center; }
+  #success-screen { display: none; text-align: center; padding: var(--space-8) var(--space-5); }
+  #success-screen h2 { margin: 0 0 var(--space-2); color: var(--heading); font-size: 22px; }
+  #success-screen p { margin: 0; color: var(--ink-2); }
+</style>
+<meta name="tsg-hosted-page" content="built from tsg-client-forms by tools/build-site.js; backend https://script.google.com/macros/s/AKfycby9oMzIXMySG6s9qBf1r17gHML4zgtrxOPVt2uAMWvshjPlHDcouDMUITo6hm4Sa-C_lA/exec">
+</head>
+<body class="tsg">
+<!-- Shared page chrome (2026-10-01): the QA test banner and the page-load
+     notice, identical on every page. Included right after <body> via
+     the include('Chrome') scriptlet. Both are hidden until the page's own
+     script shows them: the banner when doGet issued a QA test token for this
+     page load (?qatest= matched the QA_TEST_SECRET script property), the
+     notice when the FUB agent roster came back empty, which only happens
+     when the project could not reach FUB (bad key, outage). No detail is
+     shown here on a public page; the error alert email carries the cause. -->
+<div id="qaTestBanner">QA TEST MODE &mdash; writes are real but tagged, notifications go only to Durand</div>
+<div id="pageLoadError" role="alert">
+  <strong>This page is not working right now.</strong> The agent list could not be loaded, so this form cannot be submitted. The team has been alerted. Try again in a few minutes.
+</div>
+
+<header class="tsg-band">
+  <div>
+    <p class="tsg-band__eyebrow">The Stawasz Group | Client Forms</p>
+    <h1 class="tsg-band__title">Buyer / Seller Intake</h1>
+    <p class="tsg-band__sub">Tell us about yourself so we can prepare for you.</p>
+  </div>
+</header>
+<main class="tsg-page">
+  <p class="tsg-intro">
+    Tell us a bit about yourself so we can start helping right away.
+    Fields marked <span class="req">*</span> are required.
+  </p>
+
+  <form id="intake-form" class="tsg-form">
+
+    <!-- 2026-09-07 (audit fix, M11): honeypot. A hidden field real visitors
+         never fill in; any value means a bot filled every field on the page.
+         Identical to the one OpenHouseForm.html has always had, and the
+         server-side check in doPost (if (data.website) return {ok:true})
+         already covers it as soon as the submitted payload includes it --
+         see the submit handler below. Deliberately outside both the buyer and
+         seller sections so setRole() never disables it. -->
+    <input type="text" id="website" name="website" autocomplete="off" tabindex="-1" aria-hidden="true">
+
+    <div class="tsg-section"><h2 class="tsg-section__label">Let's Get Started</h2></div>
+    <div class="field">
+      <label class="qlabel">Are you looking to buy or sell?<span class="req">*</span></label>
+      <div class="choice-group role-group">
+        <label><input type="radio" name="role" value="buyer" id="role-buyer" required> I'm Buying</label>
+        <label><input type="radio" name="role" value="seller" id="role-seller"> I'm Selling</label>
+      </div>
+    </div>
+    <div class="field">
+      <label class="qlabel" for="referralAgent">Which agent referred you to this form?</label>
+      <!-- 2026-09-07, per Durand: this list was hardcoded twice today --
+           first a stale roster (first names only, plus several people no
+           longer on the team, so resolveAgentEmail matched nothing and a
+           referring agent was never copied on the notification), then a
+           hand-copy of OpenHouseForm.html's 6 names. It is now built at
+           page load from AGENT_LIST, which doGet fills from FUB's own user
+           roster (see getAgentList in Code.gs), so there is no second copy
+           left to drift. Values are still the full names AGENT_EMAILS /
+           AGENT_IDS key off (resolveAgentEmail matches on the lowercased
+           FIRST word, so a full name resolves correctly). Blank stays
+           first, and stays the only option in markup, because this field
+           is optional -- a failed roster fetch leaves "Not sure" selected
+           rather than erroring. -->
+      <select id="referralAgent" name="referralAgent">
+        <option value="">Not sure</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="qlabel" for="referredBy">Who referred you to us? Name them below.<span class="req">*</span></label>
+      <!-- 2026-09-09, per Durand (required-fields-vs-legacy pass): this
+           field lives outside both #buyer-section and #seller-section (it's
+           shared, asked before the role choice), so fieldsMarkedRequired()
+           never sees it and the .req span alone would have no effect --
+           `required` is set directly on the input instead, same pattern as
+           the shared consent checkbox and the role radios below. Legacy
+           Seller Intake Form had this required ("Referred by?*"); legacy
+           Buyer Intake Form did not. Made required for both roles here so
+           the merged field meets or exceeds each legacy source rather than
+           quietly dropping below the Seller form's original bar. -->
+      <input type="text" id="referredBy" name="referredBy" required>
+    </div>
+
+    <!-- ===================== BUYER SECTION ===================== -->
+    <div id="buyer-section">
+
+    <div class="tsg-section"><h2 class="tsg-section__label">Buyer Information</h2></div>
+    <div class="field">
+      <label class="qlabel" for="buyer1Name">Buyer 1 Name (as it appears on your ID)<span class="req">*</span></label>
+      <input type="text" id="buyer1Name" name="buyer1Name">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="buyer1Mobile">Buyer 1 Mobile<span class="req">*</span></label>
+      <input type="tel" id="buyer1Mobile" name="buyer1Mobile">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="buyer1Email">Buyer 1 Email<span class="req">*</span></label>
+      <input type="email" id="buyer1Email" name="buyer1Email">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="buyer1Birthday">Buyer 1 Birthday</label>
+      <input type="date" id="buyer1Birthday" name="buyer1Birthday">
+    </div>
+
+    <button type="button" class="tsg-btn tsg-btn--ghost toggle-cobuyer" id="cobuyer-btn">+ Add a Co-Buyer</button>
+
+    <div id="buyer2-fields">
+      <div class="field">
+        <label class="qlabel" for="buyer2Name">Buyer 2 Name (as it appears on your ID)<span class="req">*</span></label>
+        <input type="text" id="buyer2Name" name="buyer2Name">
+      </div>
+      <div class="field">
+        <label class="qlabel" for="buyer2Mobile">Buyer 2 Mobile<span class="req">*</span></label>
+        <input type="tel" id="buyer2Mobile" name="buyer2Mobile">
+      </div>
+      <div class="field">
+        <label class="qlabel" for="buyer2Email">Buyer 2 Email<span class="req">*</span></label>
+        <input type="email" id="buyer2Email" name="buyer2Email">
+      </div>
+      <div class="field">
+        <label class="qlabel" for="buyer2Birthday">Buyer 2 Birthday</label>
+        <input type="date" id="buyer2Birthday" name="buyer2Birthday">
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="qlabel" for="currentAddress">What is your current address?<span class="req">*</span></label>
+      <input type="text" id="currentAddress" name="currentAddress">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="altAddress">Alternative address to track for travel times</label>
+      <input type="text" id="altAddress" name="altAddress">
+      <div class="hint">Family, workplace, etc. Optional.</div>
+    </div>
+    <div class="field">
+      <label class="qlabel" for="maxTravelTime">Is there a travel time we should not exceed?</label>
+      <input type="text" id="maxTravelTime" name="maxTravelTime">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="occupation">What is your occupation?</label>
+      <input type="text" id="occupation" name="occupation">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="householdMembers">Any additional household members apart from the buyers listed above?<span class="req">*</span></label>
+      <input type="text" id="householdMembers" name="householdMembers">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="pets">List any pets.</label>
+      <input type="text" id="pets" name="pets">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="whyOwnHouse">Why do you want to own a house?</label>
+      <textarea id="whyOwnHouse" name="whyOwnHouse"></textarea>
+    </div>
+
+    <div class="tsg-section"><h2 class="tsg-section__label">Availability &amp; Representation</h2></div>
+    <div class="field">
+      <label class="qlabel" for="viewingAvailability">Which days of the week and times are best to view properties?<span class="req">*</span></label>
+      <input type="text" id="viewingAvailability" name="viewingAvailability">
+    </div>
+    <div class="field">
+      <label class="qlabel">Can you take a few hours off work to see properties?</label>
+      <div class="choice-group">
+        <label><input type="radio" name="canTakeTimeOff" value="Yes"> Yes</label>
+        <label><input type="radio" name="canTakeTimeOff" value="No"> No</label>
+        <label><input type="radio" name="canTakeTimeOff" value="I'm not sure"> I'm not sure</label>
+      </div>
+    </div>
+    <div class="field">
+      <label class="qlabel">Have you seen any other properties with another Realtor&reg;?</label>
+      <div class="choice-group">
+        <label><input type="radio" name="hasAgent" value="Yes"> Yes</label>
+        <label><input type="radio" name="hasAgent" value="No"> No</label>
+      </div>
+    </div>
+    <div class="field">
+      <label class="qlabel">Have you signed a buyer representation agreement with an agent?</label>
+      <div class="choice-group">
+        <label><input type="radio" name="buyerAgreementStatus" value="Yes"> Yes</label>
+        <label><input type="radio" name="buyerAgreementStatus" value="No"> No</label>
+        <label><input type="radio" name="buyerAgreementStatus" value="Not sure"> Not sure</label>
+      </div>
+    </div>
+
+    <div class="tsg-section"><h2 class="tsg-section__label">Current Housing Situation</h2></div>
+    <div class="field">
+      <label class="qlabel">Are you selling your current home?<span class="req">*</span></label>
+      <div class="choice-group">
+        <label><input type="radio" name="sellingCurrentHome" value="Yes"> Yes</label>
+        <label><input type="radio" name="sellingCurrentHome" value="No"> No</label>
+      </div>
+    </div>
+    <div class="field">
+      <label class="qlabel">Do you currently rent?<span class="req">*</span></label>
+      <div class="choice-group">
+        <label><input type="radio" name="currentlyRent" value="Yes" id="rent-yes"> Yes</label>
+        <label><input type="radio" name="currentlyRent" value="No" id="rent-no"> No</label>
+      </div>
+    </div>
+
+    <div id="renting-subfields">
+      <div class="field">
+        <label class="qlabel" for="leaseEndDate">If currently renting, what is your lease end date?</label>
+        <input type="date" id="leaseEndDate" name="leaseEndDate">
+      </div>
+      <div class="field">
+        <label class="qlabel">If currently renting, would a month-to-month lease be possible?</label>
+        <div class="choice-group">
+          <label><input type="radio" name="monthToMonthPossible" value="Yes"> Yes</label>
+          <label><input type="radio" name="monthToMonthPossible" value="No"> No</label>
+          <label><input type="radio" name="monthToMonthPossible" value="Maybe"> Maybe</label>
+        </div>
+      </div>
+      <div class="field">
+        <label class="qlabel">If currently renting, have you pre-paid your last month's rent?</label>
+        <div class="choice-group">
+          <label><input type="radio" name="prepaidLastMonth" value="Yes"> Yes</label>
+          <label><input type="radio" name="prepaidLastMonth" value="No"> No</label>
+          <label><input type="radio" name="prepaidLastMonth" value="I don't know"> I don't know</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="qlabel">Is this your first time purchasing a home?<span class="req">*</span></label>
+      <div class="choice-group">
+        <label><input type="radio" name="firstTimeBuyer" value="Yes"> Yes</label>
+        <label><input type="radio" name="firstTimeBuyer" value="No"> No</label>
+      </div>
+    </div>
+    <div class="field">
+      <label class="qlabel" for="intendedDuration">How long do you intend to live in the property?</label>
+      <input type="text" id="intendedDuration" name="intendedDuration">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="idealSettlementDate">What is your ideal settlement date?<span class="req">*</span></label>
+      <input type="date" id="idealSettlementDate" name="idealSettlementDate">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="timeConstraints">Any planned time constraints, such as vacations?<span class="req">*</span></label>
+      <input type="text" id="timeConstraints" name="timeConstraints">
+    </div>
+
+    <div class="tsg-section"><h2 class="tsg-section__label">Home Preferences</h2></div>
+    <div class="field">
+      <label class="qlabel">Is a basement a must-have?</label>
+      <div class="choice-group">
+        <label><input type="radio" name="basementMustHave" value="Yes"> Yes</label>
+        <label><input type="radio" name="basementMustHave" value="No"> No</label>
+        <label><input type="radio" name="basementMustHave" value="Strongly Preferred"> Strongly Preferred</label>
+        <label><input type="radio" name="basementMustHave" value="Not a deal-breaker"> Not a deal-breaker</label>
+      </div>
+    </div>
+    <div class="field">
+      <label class="qlabel">Which of the following are you interested in?</label>
+      <div class="choice-group">
+        <label><input type="checkbox" name="propertyTypes" value="Detached single-family"> Detached single-family</label>
+        <label><input type="checkbox" name="propertyTypes" value="Twin"> Twin (two homes attached)</label>
+        <label><input type="checkbox" name="propertyTypes" value="Townhouse"> Townhouse</label>
+        <label><input type="checkbox" name="propertyTypes" value="Condo"> Condo</label>
+      </div>
+    </div>
+    <div class="field">
+      <label class="qlabel" for="minBedrooms">How many bedrooms would you like at minimum?<span class="req">*</span></label>
+      <select id="minBedrooms" name="minBedrooms">
+        <option value="">Choose</option>
+        <option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="qlabel" for="minBathrooms">How many bathrooms would you like at minimum?<span class="req">*</span></label>
+      <select id="minBathrooms" name="minBathrooms">
+        <option value="">Choose</option>
+        <option>1</option><option>1.5</option><option>2</option><option>2.5</option><option>3</option>
+        <option>3.5</option><option>4</option><option>4.5</option><option>5</option><option>5.5+</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="qlabel" for="minSquareFootage">How much square footage would you like at minimum?<span class="req">*</span></label>
+      <input type="text" id="minSquareFootage" name="minSquareFootage">
+    </div>
+    <div class="field">
+      <label class="qlabel">Is central air a requirement?<span class="req">*</span></label>
+      <div class="choice-group">
+        <label><input type="radio" name="centralAirRequired" value="Yes"> Yes</label>
+        <label><input type="radio" name="centralAirRequired" value="No"> No</label>
+      </div>
+    </div>
+    <div class="field">
+      <label class="qlabel" for="mostImportantRoom">What would be the most important room in your house?<span class="req">*</span></label>
+      <input type="text" id="mostImportantRoom" name="mostImportantRoom">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="dreamHouseDetails">What else do we need to know about your dream house and lifestyle?<span class="req">*</span></label>
+      <textarea id="dreamHouseDetails" name="dreamHouseDetails"></textarea>
+      <div class="hint">Yard, basement, parking, kitchen, dishwasher, flooring, layout, condition, etc.</div>
+    </div>
+    <div class="field">
+      <label class="qlabel" for="neighborhoods">What neighborhoods do you see yourself living in?<span class="req">*</span></label>
+      <input type="text" id="neighborhoods" name="neighborhoods">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="mustBeNear">What do you need to live near?</label>
+      <input type="text" id="mustBeNear" name="mustBeNear">
+      <div class="hint">Transit, work, place of worship, shopping, etc.</div>
+    </div>
+    <div class="field">
+      <label class="qlabel">Are you looking for new construction?<span class="req">*</span></label>
+      <div class="choice-group">
+        <label><input type="radio" name="newConstruction" value="Yes"> Yes</label>
+        <label><input type="radio" name="newConstruction" value="No"> No</label>
+        <label><input type="radio" name="newConstruction" value="No preference"> No preference</label>
+      </div>
+    </div>
+    <div class="field">
+      <label class="qlabel" for="housesSeen">Please list any houses you've seen and the viewing method.<span class="req">*</span></label>
+      <textarea id="housesSeen" name="housesSeen"></textarea>
+      <div class="hint">Online, open house, agent showings, etc.</div>
+    </div>
+    <div class="field">
+      <label class="qlabel">What is your favorite online home search tool?<span class="req">*</span></label>
+      <div class="choice-group">
+        <label><input type="radio" name="searchTool" value="Zillow"> Zillow</label>
+        <label><input type="radio" name="searchTool" value="Redfin"> Redfin</label>
+        <label><input type="radio" name="searchTool" value="Realtor.com"> Realtor.com</label>
+        <label><input type="radio" name="searchTool" value="Trulia"> Trulia</label>
+        <label><input type="radio" name="searchTool" value="Other" id="searchTool-other-radio"> Other</label>
+      </div>
+      <input type="text" class="other-input" id="searchToolOther" name="searchToolOther" placeholder="Please specify">
+    </div>
+
+    <div class="tsg-section"><h2 class="tsg-section__label">Financing</h2></div>
+    <div class="field">
+      <label class="qlabel" for="priceRange">What is your price range?<span class="req">*</span></label>
+      <input type="text" id="priceRange" name="priceRange">
+    </div>
+    <div class="field">
+      <label class="qlabel">Are you pre-approved by a lender?<span class="req">*</span></label>
+      <div class="choice-group">
+        <label><input type="radio" name="preApproved" value="Yes" id="preapproved-yes"> Yes</label>
+        <label><input type="radio" name="preApproved" value="No" id="preapproved-no"> No</label>
+      </div>
+    </div>
+    <div id="preapproved-subfields">
+      <div class="field">
+        <label class="qlabel" for="lenderName">Name of the lender you are working with</label>
+        <input type="text" id="lenderName" name="lenderName">
+      </div>
+      <div class="field">
+        <label class="qlabel">Have you obtained a Good Faith Estimate from your lender?</label>
+        <div class="choice-group">
+          <label><input type="radio" name="goodFaithEstimate" value="Yes"> Yes</label>
+          <label><input type="radio" name="goodFaithEstimate" value="No"> No</label>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="qlabel">What is your financing type?<span class="req">*</span></label>
+      <div class="choice-group">
+        <label><input type="radio" name="financingType" value="Cash"> Cash</label>
+        <label><input type="radio" name="financingType" value="Conventional"> Conventional</label>
+        <label><input type="radio" name="financingType" value="VA"> VA</label>
+        <label><input type="radio" name="financingType" value="FHA"> FHA</label>
+        <label><input type="radio" name="financingType" value="Other" id="financing-other-radio"> Other</label>
+      </div>
+      <input type="text" class="other-input" id="financingTypeOther" name="financingTypeOther" placeholder="Please specify">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="cashSaved">How much cash do you have saved for your home purchase?<span class="req">*</span></label>
+      <input type="text" id="cashSaved" name="cashSaved">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="currentMonthlyPayment">What is your current monthly housing payment?<span class="req">*</span></label>
+      <input type="text" id="currentMonthlyPayment" name="currentMonthlyPayment">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="idealMonthlyPayment">What is your ideal monthly payment range?<span class="req">*</span></label>
+      <input type="text" id="idealMonthlyPayment" name="idealMonthlyPayment">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="howToMakeGreatExperience">How can we make this a great experience for you?<span class="req">*</span></label>
+      <textarea id="howToMakeGreatExperience" name="howToMakeGreatExperience"></textarea>
+    </div>
+
+    </div>
+    <!-- ===================== END BUYER SECTION ===================== -->
+
+    <!-- ===================== SELLER SECTION ===================== -->
+    <div id="seller-section">
+
+    <div class="tsg-section"><h2 class="tsg-section__label">Seller Information</h2></div>
+    <div class="field">
+      <label class="qlabel" for="seller1Name">Seller 1 Name (as it appears on your ID)<span class="req">*</span></label>
+      <input type="text" id="seller1Name" name="seller1Name">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="seller1Mobile">Seller 1 Mobile<span class="req">*</span></label>
+      <input type="tel" id="seller1Mobile" name="seller1Mobile">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="seller1Email">Seller 1 Email<span class="req">*</span></label>
+      <input type="email" id="seller1Email" name="seller1Email">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="seller1Birthday">Seller 1 Birthday</label>
+      <input type="date" id="seller1Birthday" name="seller1Birthday">
+    </div>
+
+    <button type="button" class="tsg-btn tsg-btn--ghost toggle-cobuyer" id="coseller-btn">+ Add a Second Seller</button>
+
+    <div id="seller2-fields">
+      <div class="field">
+        <label class="qlabel" for="seller2Name">Seller 2 Name (as it appears on your ID)</label>
+        <input type="text" id="seller2Name" name="seller2Name">
+      </div>
+      <div class="field">
+        <label class="qlabel" for="seller2Mobile">Seller 2 Mobile</label>
+        <input type="tel" id="seller2Mobile" name="seller2Mobile">
+      </div>
+      <div class="field">
+        <label class="qlabel" for="seller2Email">Seller 2 Email</label>
+        <input type="email" id="seller2Email" name="seller2Email">
+      </div>
+      <div class="field">
+        <label class="qlabel" for="seller2Birthday">Seller 2 Birthday</label>
+        <input type="date" id="seller2Birthday" name="seller2Birthday">
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="qlabel" for="sellerCurrentAddress">Current address of the property you're selling<span class="req">*</span></label>
+      <input type="text" id="sellerCurrentAddress" name="currentAddress">
+    </div>
+
+    <div class="tsg-section"><h2 class="tsg-section__label">About the Property</h2></div>
+    <div class="field">
+      <label class="qlabel" for="timeInProperty">How long have you lived in the property?<span class="req">*</span></label>
+      <input type="text" id="timeInProperty" name="timeInProperty">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="numBedrooms">How many bedrooms are in the property?<span class="req">*</span></label>
+      <input type="text" id="numBedrooms" name="numBedrooms">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="numBathrooms">How many bathrooms are in the property?<span class="req">*</span></label>
+      <input type="text" id="numBathrooms" name="numBathrooms">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="improvementsSinceMovingIn">Have you made any improvements since moving in?<span class="req">*</span></label>
+      <textarea id="improvementsSinceMovingIn" name="improvementsSinceMovingIn"></textarea>
+    </div>
+    <div class="field">
+      <label class="qlabel" for="topSellingFeatures">In your opinion, what are the top selling features of your home?<span class="req">*</span></label>
+      <textarea id="topSellingFeatures" name="topSellingFeatures"></textarea>
+    </div>
+    <div class="field">
+      <label class="qlabel" for="householdMembersPets">Household Members/Pet info<span class="req">*</span></label>
+      <input type="text" id="householdMembersPets" name="householdMembersPets">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="lifestyleNotes">What else do we need to know about the house and your lifestyle?<span class="req">*</span></label>
+      <textarea id="lifestyleNotes" name="lifestyleNotes"></textarea>
+      <div class="hint">Yard, basement, parking, kitchen condition &amp; size, central air, dishwasher, flooring, layout, overall condition.</div>
+    </div>
+
+    <div class="tsg-section"><h2 class="tsg-section__label">Selling Goals</h2></div>
+    <div class="field">
+      <label class="qlabel" for="idealSettleTime">Ideal time to settle?<span class="req">*</span></label>
+      <input type="text" id="idealSettleTime" name="idealSettleTime">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="estimatedHomeValue">How much do you think your home is worth?<span class="req">*</span></label>
+      <input type="text" id="estimatedHomeValue" name="estimatedHomeValue">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="greatExperienceNotes">How can we make this a great experience for you?<span class="req">*</span></label>
+      <textarea id="greatExperienceNotes" name="greatExperienceNotes"></textarea>
+    </div>
+    <div class="field">
+      <label class="qlabel" for="sellingMotivation">What is your main motivation for selling your home?<span class="req">*</span></label>
+      <textarea id="sellingMotivation" name="sellingMotivation"></textarea>
+    </div>
+    <div class="field">
+      <label class="qlabel" for="movingDestination">Where are you moving once we sell your home for you?<span class="req">*</span></label>
+      <input type="text" id="movingDestination" name="movingDestination">
+    </div>
+    <div class="field">
+      <label class="qlabel">Ideally, would you be prepared to move in the next 60 days?<span class="req">*</span></label>
+      <div class="choice-group">
+        <label><input type="radio" name="readyToMoveIn60Days" value="Yes"> Yes</label>
+        <label><input type="radio" name="readyToMoveIn60Days" value="No"> No</label>
+      </div>
+    </div>
+    <div class="field">
+      <label class="qlabel" for="mortgageBalance">What is the balance of any existing mortgages on the property?<span class="req">*</span></label>
+      <input type="text" id="mortgageBalance" name="mortgageBalance">
+    </div>
+    <div class="field">
+      <label class="qlabel" for="conditionRating1to10">How would you rate the current condition of your home on a scale of 1 to 10? What would make it a 10?<span class="req">*</span></label>
+      <textarea id="conditionRating1to10" name="conditionRating1to10"></textarea>
+    </div>
+    <div class="field">
+      <label class="qlabel" for="infoNeededToHire">What information do you need to see from us before you're ready to hire us to sell your home?<span class="req">*</span></label>
+      <textarea id="infoNeededToHire" name="infoNeededToHire"></textarea>
+    </div>
+    <div class="field">
+      <label class="qlabel">If we show you we can net you top dollar for your home, will you be ready to hire us when we meet?<span class="req">*</span></label>
+      <div class="choice-group">
+        <label><input type="radio" name="readyToHireIfSatisfied" value="Yes"> Yes</label>
+        <label><input type="radio" name="readyToHireIfSatisfied" value="No"> No</label>
+      </div>
+    </div>
+    <div class="field">
+      <label class="qlabel" for="sellerFormFeedback">Form Feedback</label>
+      <textarea id="sellerFormFeedback" name="formFeedback"></textarea>
+    </div>
+
+    </div>
+    <!-- ===================== END SELLER SECTION ===================== -->
+
+    <div class="tsg-section"><h2 class="tsg-section__label">Before You Submit</h2></div>
+
+    <!-- 2026-09-10, per Durand: PA/NJ agency disclosure notice + required
+         acknowledgment checkbox. Deliberately outside both #buyer-section and
+         #seller-section, same as the referredBy field and the consent
+         checkbox below, so setRole() never disables it and it applies to
+         both roles. -->
+    <div class="field">
+      <p class="notice-text">
+        Pennsylvania and New Jersey law entitle you to an explanation of real estate agency relationships (buyer's agent, seller's agent, dual agent) before you share confidential details about your search or sale. TSG provides this notice to every prospective client. By checking the box below, you acknowledge you've received it.
+      </p>
+      <div class="consent-row">
+        <input type="checkbox" id="agencyDisclosureAck" name="agencyDisclosureAck" value="Yes" required>
+        <label for="agencyDisclosureAck">I acknowledge I've received TSG's agency relationship disclosure. <span class="req">*</span></label>
+      </div>
+    </div>
+
+    <!-- 2026-09-07, per Durand: consent capture, matching Open House
+         Sign-In. The wording below is v1 (2026-08-26) verbatim, character
+         for character, from OpenHouseForm.html -- if it is edited here it
+         MUST be edited there too, or CONSENT_VERSION in Code.gs has to be
+         split into a per-form constant, or the audit log stops being
+         traceable to the language actually shown. Deliberately outside both
+         #buyer-section and #seller-section so setRole() never disables it
+         and it applies to both roles. -->
+    <div class="field">
+      <div class="consent-row">
+        <input type="checkbox" id="followUpConsent" name="followUpConsent" value="Yes" required>
+        <label for="followUpConsent">By checking this box, I agree to be contacted by The Stawasz Group and its agents by phone, text message, and email — including by autodialer or prerecorded message — about this and other properties. Consent is not a condition of any purchase or service. Message and data rates may apply. Reply STOP to opt out at any time. <span class="req">*</span></label>
+      </div>
+    </div>
+
+    <button type="submit" id="submit-btn" class="tsg-btn tsg-btn--submit" disabled>Choose Buying or Selling Above</button>
+    <div id="status-msg" class="tsg-msg tsg-msg--err"></div>
+  </form>
+
+  <div id="success-screen" class="field">
+    <h2>Thank you!</h2>
+    <p>A member of The Stawasz Group will follow up with you shortly.</p>
+  </div>
+</main>
+
+<script>
+(function () {
+  var q = new URLSearchParams(window.location.search);
+  var body = { action: 'page.init', form: "buyer-seller", qatest: q.get('qatest') || '', website: '' };
+  function fail() {
+    var el = document.getElementById('pageLoadError');
+    if (el) el.style.display = 'block';
+  }
+  fetch("https://script.google.com/macros/s/AKfycby9oMzIXMySG6s9qBf1r17gHML4zgtrxOPVt2uAMWvshjPlHDcouDMUITo6hm4Sa-C_lA/exec", { method: 'POST', body: JSON.stringify(body) })
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+      if (!res || !res.ok || typeof res.submitToken !== 'string') { fail(); return; }
+      res.agentList = Array.isArray(res.agentList) ? res.agentList : [];
+      res.timeframeList = Array.isArray(res.timeframeList) ? res.timeframeList : [];
+      res.param = function (name) { return q.get(name) || ''; };
+      __run(res);
+    })
+    .catch(fail);
+})();
+function __run(__INIT) {
+const SUBMIT_TOKEN = __INIT.submitToken;
+// 2026-09-07, per Durand: was a hardcoded /exec URL pointing at the old
+// "Deal Forms - FUB Proxy" deployment this form was copied from -- now
+// derived from the templated baseUrl doGet sets, exactly as
+// OpenHouseForm.html does, so it always posts back to this project's own
+// deployment (including after any future re-deploy).
+const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycby9oMzIXMySG6s9qBf1r17gHML4zgtrxOPVt2uAMWvshjPlHDcouDMUITo6hm4Sa-C_lA/exec?form=buyer-seller";
+
+// QA test mode token. "" on every normal page load; a server-minted UUID only
+// when doGet's ?qatest= value matched the QA_TEST_SECRET script property (see
+// the QA_TEST_* block in Code.gs). Templated the same way SUBMIT_TOKEN above
+// is -- a plain print-scriptlet with no expression escaping -- because like
+// SUBMIT_TOKEN this value is
+// generated server-side and is never visitor input, so there is nothing for
+// safeJsString() to protect against. Holding it does NOT by itself put the
+// backend in test mode: doPost re-verifies it against the script cache on
+// every submission and ignores it otherwise.
+const QA_TEST_TOKEN = __INIT.qaTestToken;
+
+// Show the QA test banner (the shared one in Chrome.html; push the page down
+// so it isn't covered by the fixed banner) whenever this page load is a test
+// session, so Durand can never mistake a test form for the real one at a
+// glance.
+if (QA_TEST_TOKEN) {
+  const qaBannerEl = document.getElementById('qaTestBanner');
+  qaBannerEl.style.display = 'block';
+  document.body.style.paddingTop = (qaBannerEl.offsetHeight || 40) + 'px';
+}
+
+// 2026-09-07, per Durand: the "Which agent referred you to this form?"
+// dropdown is built from FUB's own user roster instead of a hardcoded
+// <option> list -- see getAgentList in Code.gs. Already JSON (doGet
+// JSON.stringify's it), so it's embedded through the raw, force-printing
+// scriptlet form rather than safeJsString(): unlike the prefill values below,
+// it contains nothing a visitor can put in a query param. Fails open to [],
+// leaving the field with just its "Not sure" option. Populated here, before
+// the prefill block further down, so any option this dropdown ever needs to
+// pre-select exists by the time a .value assignment could run.
+const AGENT_LIST = __INIT.agentList;
+AGENT_LIST.forEach(a => {
+  const opt = document.createElement('option');
+  opt.value = a.name;
+  opt.textContent = a.name;
+  document.getElementById('referralAgent').appendChild(opt);
+});
+// 2026-10-01: an empty roster means the FUB fetch failed on the server; say
+// so on the page (Chrome.html's notice) instead of leaving a silently empty
+// referring-agent dropdown.
+if (!AGENT_LIST.length) {
+  const pageLoadErrorEl = document.getElementById('pageLoadError');
+  if (pageLoadErrorEl) pageLoadErrorEl.style.display = 'block';
+}
+
+const form = document.getElementById('intake-form');
+const submitBtn = document.getElementById('submit-btn');
+
+// ---------- Role toggle (Buyer vs Seller) ----------
+const roleBuyer = document.getElementById('role-buyer');
+const roleSeller = document.getElementById('role-seller');
+const buyerSection = document.getElementById('buyer-section');
+const sellerSection = document.getElementById('seller-section');
+
+// Snapshot which fields were originally marked required in each section
+// (via the visible "*" in their label -- the actual `required` attribute is
+// applied/removed dynamically below so a hidden section never blocks
+// submission), so switching roles back and forth restores the right set.
+function fieldsMarkedRequired(section) {
+  return Array.from(section.querySelectorAll('.field')).filter(f => f.querySelector('.req')).map(f => {
+    // A field can hold a single input/select/textarea, or a choice-group of
+    // radios sharing one name -- either way, mark every input/select/textarea
+    // inside it, since the required flag is what actually blocks submission.
+    return Array.from(f.querySelectorAll('input,select,textarea'));
+  }).flat();
+}
+const buyerRequiredEls = fieldsMarkedRequired(buyerSection);
+const sellerRequiredEls = fieldsMarkedRequired(sellerSection);
+
+// Every input/select/textarea in each section. The buyer and seller sections
+// reuse some field names (e.g. both have a "currentAddress" field), so
+// FormData(form) would otherwise silently collect a value from whichever
+// section is LAST in the DOM regardless of which one is actually visible.
+// Disabling every field in the hidden section (not just visually hiding it)
+// removes it from FormData entirely and closes off that whole class of bug,
+// not just the one known collision.
+const buyerAllEls = Array.from(buyerSection.querySelectorAll('input,select,textarea'));
+const sellerAllEls = Array.from(sellerSection.querySelectorAll('input,select,textarea'));
+
+// Fast membership lookup for "was this field marked with a * in its label?".
+const buyerRequiredSet = new Set(buyerRequiredEls);
+const sellerRequiredSet = new Set(sellerRequiredEls);
+
+// ---------- Conditional sub-panels ----------
+// 2026-09-07 (audit fix, CRITICAL): these panels are HIDDEN at page load and
+// are only revealed if the visitor opts into them, but their fields sit inside
+// a `.field` whose label carries a "*", so fieldsMarkedRequired() snapshots
+// them and setRole('buyer') used to set required=true on all of them. A
+// hidden-but-enabled required field makes the browser refuse to submit the
+// form with NO visible message (it can't focus/scroll to a hidden field), so
+// the buyer form was simply dead: the visitor pressed Submit and nothing
+// happened, forever.
+//
+// The rule this list enforces, everywhere, is: while a panel is hidden its
+// inputs are BOTH required=false AND disabled=true (disabled fields are
+// skipped by native validation and dropped from FormData entirely); when it
+// is revealed they are re-enabled and get `required` back only if the field
+// was marked with a * and its section is the currently selected role.
+//
+// Declared here, ABOVE setRole(), on purpose: setRole() calls
+// syncConditionalPanels() and is itself called from the prefill block further
+// down, which runs before the `const cobuyerBtn` / `const buyer2Fields`
+// declarations near the bottom of this file would be initialized.
+const CONDITIONAL_PANELS = [
+  { el: document.getElementById('buyer2-fields'), owner: 'buyer' },
+  { el: document.getElementById('searchToolOther'), owner: 'buyer' },
+  { el: document.getElementById('financingTypeOther'), owner: 'buyer' },
+  { el: document.getElementById('seller2-fields'), owner: 'seller' }
+].filter(p => p.el);
+
+// An element that is itself an input (the "Other" text boxes) counts as its
+// own panel; a container yields every field inside it.
+function panelFields(el) {
+  return el.matches('input,select,textarea')
+    ? [el]
+    : Array.from(el.querySelectorAll('input,select,textarea'));
+}
+
+// Every panel here starts hidden (via CSS) with no inline style, and every
+// show/hide below sets style.display to 'block' or 'none' -- so 'block' is
+// open and anything else (including '') is closed. Matches the existing
+// `style.display === 'block'` test the toggle buttons already use.
+function panelIsOpen(el) {
+  return el.style.display === 'block';
+}
+
+function currentRole() {
+  return roleBuyer.checked ? 'buyer' : (roleSeller.checked ? 'seller' : null);
+}
+
+// Re-applies disabled/required across every conditional panel. Safe to call
+// at any time, from any handler, as many times as you like.
+function syncConditionalPanels(role) {
+  const activeRole = (role === undefined) ? currentRole() : role;
+  CONDITIONAL_PANELS.forEach(panel => {
+    const usable = panelIsOpen(panel.el) && panel.owner === activeRole;
+    const requiredSet = panel.owner === 'buyer' ? buyerRequiredSet : sellerRequiredSet;
+    panelFields(panel.el).forEach(el => {
+      if (usable) {
+        el.disabled = false;
+        el.required = requiredSet.has(el);
+      } else {
+        // Order matters only for clarity, not behavior: clear `required`
+        // first so there is never a moment where a hidden field is required.
+        el.required = false;
+        el.disabled = true;
+      }
+    });
+  });
+}
+
+function setRole(role) {
+  const isBuyer = role === 'buyer';
+  buyerSection.style.display = isBuyer ? 'block' : 'none';
+  sellerSection.style.display = isBuyer ? 'none' : 'block';
+  buyerAllEls.forEach(el => { el.disabled = !isBuyer; });
+  sellerAllEls.forEach(el => { el.disabled = isBuyer; });
+  buyerRequiredEls.forEach(el => { el.required = isBuyer; });
+  sellerRequiredEls.forEach(el => { el.required = !isBuyer; });
+  // MUST run last: the two lines above blanket-apply the whole
+  // required-snapshot (which includes fields inside panels that are still
+  // hidden) and blanket-enable the whole active section, so this re-imposes
+  // the correct state on whichever panels are currently closed.
+  syncConditionalPanels(role);
+  submitBtn.disabled = false;
+  submitBtn.textContent = isBuyer ? 'Submit Buyer Intake' : 'Submit Seller Intake';
+}
+roleBuyer.addEventListener('change', () => setRole('buyer'));
+roleSeller.addEventListener('change', () => setRole('seller'));
+
+// ---------- Prefill from the "Generate Link" setup page ----------
+// All optional -- an agent who already knows the client's role/name/email/
+// phone can bake them into the link (see OpenHouseSetup.html), so the
+// client only has to review and fill in the rest. A link with none of
+// these behaves exactly as the plain form always has.
+const PREFILL_ROLE = __INIT.param('role');
+const PREFILL_NAME = __INIT.param('name');
+const PREFILL_EMAIL = __INIT.param('email');
+const PREFILL_PHONE = __INIT.param('phone');
+
+if (PREFILL_NAME) {
+  document.getElementById('buyer1Name').value = PREFILL_NAME;
+  document.getElementById('seller1Name').value = PREFILL_NAME;
+}
+if (PREFILL_EMAIL) {
+  document.getElementById('buyer1Email').value = PREFILL_EMAIL;
+  document.getElementById('seller1Email').value = PREFILL_EMAIL;
+}
+if (PREFILL_PHONE) {
+  document.getElementById('buyer1Mobile').value = PREFILL_PHONE;
+  document.getElementById('seller1Mobile').value = PREFILL_PHONE;
+}
+// Both sections get the same values (whichever one the visitor doesn't pick
+// stays disabled per setRole() and is excluded from submission either way)
+// so the right field is already filled in no matter which role they choose.
+if (PREFILL_ROLE === 'buyer') {
+  roleBuyer.checked = true;
+  setRole('buyer');
+} else if (PREFILL_ROLE === 'seller') {
+  roleSeller.checked = true;
+  setRole('seller');
+}
+
+// ---------- Buyer sub-toggles ----------
+const cobuyerBtn = document.getElementById('cobuyer-btn');
+const buyer2Fields = document.getElementById('buyer2-fields');
+const rentYes = document.getElementById('rent-yes');
+const rentNo = document.getElementById('rent-no');
+const rentingSubfields = document.getElementById('renting-subfields');
+const preYes = document.getElementById('preapproved-yes');
+const preNo = document.getElementById('preapproved-no');
+const preSubfields = document.getElementById('preapproved-subfields');
+
+cobuyerBtn.addEventListener('click', () => {
+  const showing = buyer2Fields.style.display === 'block';
+  buyer2Fields.style.display = showing ? 'none' : 'block';
+  cobuyerBtn.textContent = showing ? '+ Add a Co-Buyer' : '− Remove Co-Buyer';
+  // 2026-09-07 (audit fix): this used to set `required` and nothing else, so
+  // closing the panel left three enabled, hidden, still-required fields that
+  // silently blocked submission. syncConditionalPanels() sets required AND
+  // disabled together -- see its comment above setRole().
+  syncConditionalPanels();
+});
+
+function wireToggle(yesEl, noEl, panel){
+  [yesEl, noEl].forEach(el => el.addEventListener('change', () => {
+    panel.style.display = yesEl.checked ? 'block' : 'none';
+  }));
+}
+wireToggle(rentYes, rentNo, rentingSubfields);
+wireToggle(preYes, preNo, preSubfields);
+
+// 2026-09-07 (audit fix): both "Other" text boxes are wired to EVERY radio in
+// their group, not just the "Other" radio. A `change` event only fires on the
+// radio that becomes checked, so picking "Other" and then changing your mind
+// to "Zillow" never fired the old handler -- the box stayed visible and (worse)
+// stayed required, silently blocking submission. Each handler now re-reads the
+// "Other" radio's checked state and hands off to syncConditionalPanels(),
+// which sets required AND disabled together.
+function wireOtherInput(radioName, otherRadioId, otherInputId) {
+  const otherRadio = document.getElementById(otherRadioId);
+  const otherInput = document.getElementById(otherInputId);
+  Array.from(form.querySelectorAll('input[name="' + radioName + '"]')).forEach(radio => {
+    radio.addEventListener('change', () => {
+      otherInput.style.display = otherRadio.checked ? 'block' : 'none';
+      syncConditionalPanels();
+    });
+  });
+}
+wireOtherInput('searchTool', 'searchTool-other-radio', 'searchToolOther');
+wireOtherInput('financingType', 'financing-other-radio', 'financingTypeOther');
+
+// ---------- Seller sub-toggle ----------
+const cosellerBtn = document.getElementById('coseller-btn');
+const seller2Fields = document.getElementById('seller2-fields');
+cosellerBtn.addEventListener('click', () => {
+  const showing = seller2Fields.style.display === 'block';
+  seller2Fields.style.display = showing ? 'none' : 'block';
+  cosellerBtn.textContent = showing ? '+ Add a Second Seller' : '− Remove Second Seller';
+  // None of the Seller 2 fields is marked required, so this panel never had
+  // the blocking bug the co-buyer panel did -- it goes through the same helper
+  // anyway so the "hidden means disabled" rule holds for every panel, and so
+  // it stays correct if a "*" is ever added to one of these labels.
+  syncConditionalPanels();
+});
+
+// Initial pass, once everything above is wired: puts every conditional panel
+// into its correct closed state (required=false, disabled=true) before the
+// visitor has picked a role, so the very first submit attempt is never
+// blocked by a hidden field.
+syncConditionalPanels();
+
+// ---------- Status message ----------
+// #status-msg is a design-system .tsg-msg (hidden until it has text), so the
+// error/success toggle sets both the modifier class and display.
+const statusMsg = document.getElementById('status-msg');
+function showStatus(text, kind) {
+  statusMsg.textContent = text || '';
+  statusMsg.className = 'tsg-msg ' + (kind === 'success' ? 'tsg-msg--ok' : 'tsg-msg--err');
+  statusMsg.style.display = text ? 'block' : 'none';
+}
+
+// ---------- Submit ----------
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  showStatus('');
+
+  const role = roleBuyer.checked ? 'buyer' : (roleSeller.checked ? 'seller' : null);
+  if (!role) {
+    showStatus('Choose Buying or Selling above.', 'error');
+    return;
+  }
+
+  const data = Object.fromEntries(new FormData(form).entries());
+  data.propertyTypes = Array.from(form.querySelectorAll('input[name="propertyTypes"]:checked')).map(el => el.value);
+  // 2026-09-07, per Durand: send followUpConsent explicitly rather than
+  // relying on FormData, which omits an unchecked box entirely. The backend
+  // (and the consent audit log) compares against the literal 'Yes'/'No' the
+  // Open House form sends, so an absent key would silently log as 'No' with
+  // no way to tell "declined" from "never asked". The checkbox is `required`
+  // so a real submission is always 'Yes'; this keeps a direct POST honest.
+  data.followUpConsent = document.getElementById('followUpConsent').checked ? 'Yes' : 'No';
+  // 2026-09-07 (audit fix, M11): honeypot value, sent the same way
+  // OpenHouseForm.html sends it. FormData already picks this field up (it is
+  // a plain named input inside the form), but it is set explicitly here so
+  // the key is guaranteed present in the payload doPost's existing
+  // `if (data.website)` check reads.
+  data.website = document.getElementById('website').value;
+  data.submittedAt = new Date().toISOString();
+  // formType matches what the old separate Buyer Intake / Seller Intake
+  // forms sent, so the backend's existing buildBuyerPersonPayload /
+  // buildSellerIntakePersonPayload need no changes.
+  data.formType = role === 'buyer' ? 'buyer' : 'seller-intake';
+  delete data.role;
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting...';
+
+  try {
+    data.formToken = SUBMIT_TOKEN;
+    // Only sent when this page load was actually issued a test token. The key
+    // is omitted entirely otherwise, so a normal submission's payload is
+    // exactly what it has always been.
+    if (QA_TEST_TOKEN) data.qaTestToken = QA_TEST_TOKEN;
+    const res = await fetch(ENDPOINT_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (result.ok) {
+      form.style.display = 'none';
+      document.getElementById('success-screen').style.display = 'block';
+      window.scrollTo(0,0);
+      return;
+    }
+    // 2026-09-07 (audit fix, M4): a server-provided message (e.g. 'Buyer 1
+    // Email "x@y.z" is not a valid email address.') used to be thrown here and
+    // then immediately overwritten by the generic message in the catch block,
+    // so the visitor was told "something went wrong" and had no idea what to
+    // fix. The specific message is now shown for an { ok:false } response, and
+    // the generic one is kept only for a genuine network/parse failure --
+    // matching what OpenHouseForm.html already does correctly.
+    showStatus(result.error || 'Something went wrong submitting the form. Try again or contact us directly.', 'error');
+    submitBtn.disabled = false;
+    submitBtn.textContent = role === 'buyer' ? 'Submit Buyer Intake' : 'Submit Seller Intake';
+  } catch (err) {
+    showStatus('Something went wrong submitting the form. Try again or contact us directly.', 'error');
+    submitBtn.disabled = false;
+    submitBtn.textContent = role === 'buyer' ? 'Submit Buyer Intake' : 'Submit Seller Intake';
+  }
+});
+
+}
+</script>
+
+</body>
+</html>
