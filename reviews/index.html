@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your experience | The Stawasz Group</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+<meta name="tsg-design-system" content="https://claude.ai/artifact/95idpCrB8UNTjKZ5Q8jm3k v1">
+<style>
+  /* TSG Design System tokens (project/tokens.json v1), light and dark. Every
+     color on this page comes from one of these; no raw hex below this block. */
+  :root {
+    --brand: #15464A; --brand-ink: #FFFFFF; --brand-deep: #0D3134; --brand-tint: #E3EDED; --heading: #15464A;
+    --ground: #F1F1F1; --surface: #FFFFFF; --input: #F3F3F3; --line: #CCCCCC; --line-soft: #E2E6E6;
+    --ink: #0F2426; --ink-2: #3E4F50; --muted: #5A6A6B; --on-band-muted: #BCD6D4;
+    --good: #1F7A4D; --good-bg: #E4F2EA; --critical: #B3261E; --critical-bg: #FBE4E2;
+    --font-sans: Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --radius-sm: 4px; --radius-md: 8px;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --brand: #0F3A3D; --brand-ink: #E8F1F1; --brand-deep: #0A2A2C; --brand-tint: #1B3A3D; --heading: #9FD3D6;
+      --ground: #0C1A1C; --surface: #12262A; --input: #17302F; --line: #2E4A4D; --line-soft: #223B3E;
+      --ink: #E6EEEE; --ink-2: #C3D2D3; --muted: #9FB3B4; --on-band-muted: #A9C9C8;
+      --good: #5CC48E; --good-bg: #15392A; --critical: #F08A82; --critical-bg: #3D1C1A;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--ground); }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 22px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .band {
+    background: var(--brand);
+    color: var(--brand-ink);
+    text-align: center;
+    padding: 20px 16px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  main { padding: 20px 16px 8px; }
+  .sheet {
+    background: var(--surface);
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 24px 20px 28px;
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-md);
+  }
+  @media (min-width: 600px) { .sheet { padding: 40px 40px 44px; } main { padding-top: 40px; } }
+  h1 {
+    font-weight: 900;
+    font-size: 28px;
+    line-height: 32px;
+    letter-spacing: -0.01em;
+    margin: 0 0 4px;
+    color: var(--heading);
+    text-wrap: balance;
+  }
+  .addr2 { font-size: 15px; line-height: 22px; font-weight: 500; margin: 0 0 6px; color: var(--ink-2); }
+  .deallabel { font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0 0 16px; }
+  .rule { width: 40px; height: 2px; background: var(--heading); border: 0; margin: 0 0 20px; }
+  h2 {
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 28px;
+    margin: 0 0 12px;
+    color: var(--ink);
+  }
+  p { margin: 0 0 16px; }
+  .q { margin: 24px 0 8px; font-weight: 700; }
+
+  /* Stars */
+  .stars { display: flex; gap: 6px; margin: 4px 0 6px; }
+  .star {
+    appearance: none; -webkit-appearance: none;
+    background: none; border: 0; padding: 4px; margin: 0;
+    width: 56px; height: 56px; cursor: pointer;
+    color: var(--line);
+    border-radius: var(--radius-sm);
+  }
+  .star svg { width: 100%; height: 100%; display: block; fill: currentColor; transition: fill 180ms ease; }
+  .star.on { color: var(--brand); }
+  .star:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+  .star.pop svg { animation: pop 260ms ease-out; }
+  @keyframes pop { 0% { transform: scale(1); } 45% { transform: scale(1.18); } 100% { transform: scale(1); } }
+  @media (prefers-reduced-motion: reduce) { .star.pop svg { animation: none; } .star svg { transition: none; } }
+  .stars.locked .star { cursor: default; }
+  .stars-hint { font-size: 14px; line-height: 21px; color: var(--muted); margin: 0 0 8px; min-height: 22px; }
+  #retryWrap { margin: -4px 0 10px; }
+
+  /* Steps */
+  ol.steps { margin: 0 0 8px; padding-left: 24px; }
+  ol.steps li { margin: 0 0 6px; padding-left: 4px; }
+
+  /* Forms */
+  label { display: block; font-weight: 700; margin: 18px 0 6px; }
+  textarea, input[type=text], input[type=tel] {
+    width: 100%; font: inherit; color: var(--ink);
+    padding: 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--input);
+  }
+  textarea { min-height: 150px; resize: vertical; }
+  textarea[disabled], input[disabled] { background: var(--ground); color: var(--muted); border-color: var(--line-soft); cursor: not-allowed; }
+  textarea:focus, input:focus { outline: 3px solid var(--brand); outline-offset: 1px; }
+  .check { display: flex; align-items: flex-start; gap: 10px; margin: 18px 0 0; font-weight: 400; }
+  .check input { width: 22px; height: 22px; margin: 0; accent-color: var(--brand); flex: none; }
+  .btn {
+    display: inline-block; font: inherit; font-weight: 700; font-size: 15px; line-height: 22px;
+    background: var(--brand); color: var(--brand-ink); border: 0; border-radius: var(--radius-md);
+    padding: 12px 20px; cursor: pointer; text-decoration: none; text-align: center;
+    min-width: 180px;
+  }
+  .btn:hover { background: var(--brand-deep); }
+  .btn:focus-visible { outline: 3px solid var(--brand); outline-offset: 3px; }
+  .btn[disabled], .btn[aria-disabled="true"] { background: var(--input); color: var(--muted); cursor: not-allowed; pointer-events: none; }
+  .actions { margin-top: 22px; }
+  .links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+  .links .btn { flex: 1 1 200px; }
+  .copied { font-size: 14px; line-height: 21px; color: var(--good); font-weight: 700; margin-top: 12px; min-height: 22px; }
+  .err { color: var(--critical); font-size: 14px; line-height: 21px; margin-top: 10px; min-height: 22px; }
+  .small { font-size: 14px; line-height: 21px; color: var(--muted); }
+  .private { border: 1px solid var(--line-soft); padding: 16px; border-radius: var(--radius-md); margin-top: 8px; }
+  .picks { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+  .pick {
+    display: block; width: 100%; text-align: left; font: inherit; cursor: pointer;
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--line); border-radius: var(--radius-md); padding: 16px 18px;
+  }
+  .pick:hover { border-color: var(--brand); }
+  .pick:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+  .pick .label { margin-bottom: 4px; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .pick .a1 { font-size: 20px; line-height: 26px; font-weight: 700; color: var(--heading); display: block; }
+  .pick .a2 { font-size: 14px; line-height: 21px; color: var(--ink-2); display: block; margin-top: 2px; }
+  .pick .done { font-size: 14px; line-height: 21px; color: var(--muted); display: block; margin-top: 6px; }
+  .pick[disabled] { cursor: default; opacity: 0.6; }
+  .pick[disabled]:hover { border-color: var(--line); }
+  .linkish { background: none; border: 0; padding: 0; font: inherit; font-size: 14px; color: var(--brand); text-decoration: underline; cursor: pointer; }
+  .linkish:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+  .backlink { margin: 0 0 14px; }
+  #declineWrap { margin: 0 0 14px; }
+  .decline-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; margin-top: 14px; }
+  .hidden { display: none !important; }
+  footer { text-align: center; font-size: 11px; line-height: 16px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); padding: 20px 16px 28px; }
+  a { color: var(--brand); }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="band">THE STAWASZ GROUP</div>
+<main>
+  <div class="sheet">
+
+    <section id="loading"><p>One moment.</p></section>
+
+    <section id="notfound" class="hidden">
+      <h2>We couldn't find your record.</h2>
+      <p>Please reply to the email you received and we'll sort it out.</p>
+    </section>
+
+    <section id="failed" class="hidden">
+      <h2>Something went wrong.</h2>
+      <p>Please try again in a moment.</p>
+    </section>
+
+    <section id="choose" class="hidden">
+      <h1 id="chooseHead">Which closing would you like to tell us about?</h1>
+      <p id="chooseIntro"></p>
+      <div class="picks" id="picks"></div>
+    </section>
+
+    <section id="rate" class="hidden">
+      <p class="backlink hidden" id="backWrap"><button type="button" class="linkish" id="backBtn">Choose a different closing</button></p>
+      <h1 id="addr1"></h1>
+      <p class="addr2" id="addr2"></p>
+      <p class="deallabel" id="dealLabel"></p>
+      <hr class="rule" aria-hidden="true">
+      <p id="greeting"></p>
+
+      <p class="q" id="rateQ">How would you rate your experience with us?</p>
+      <div class="stars" role="group" aria-labelledby="rateQ" id="stars">
+        <button type="button" class="star" aria-pressed="false" aria-label="1 star" data-v="1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.3l-6 3.3 1.3-6.6L2.4 9.4l6.7-.8z"/></svg></button>
+        <button type="button" class="star" aria-pressed="false" aria-label="2 stars" data-v="2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.3l-6 3.3 1.3-6.6L2.4 9.4l6.7-.8z"/></svg></button>
+        <button type="button" class="star" aria-pressed="false" aria-label="3 stars" data-v="3"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.3l-6 3.3 1.3-6.6L2.4 9.4l6.7-.8z"/></svg></button>
+        <button type="button" class="star" aria-pressed="false" aria-label="4 stars" data-v="4"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.3l-6 3.3 1.3-6.6L2.4 9.4l6.7-.8z"/></svg></button>
+        <button type="button" class="star" aria-pressed="false" aria-label="5 stars" data-v="5"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.3l-6 3.3 1.3-6.6L2.4 9.4l6.7-.8z"/></svg></button>
+      </div>
+      <p class="stars-hint" id="starsHint" aria-live="polite"></p>
+      <p class="hidden" id="retryWrap"><button type="button" class="linkish" id="retryRate">Try again</button></p>
+      <p class="hidden" id="declineWrap"><button type="button" class="linkish" id="declineBtn">I'd rather not leave a review</button></p>
+
+      <div id="declineConfirm" class="hidden">
+        <p>No problem. Confirm you'd rather not leave a review?</p>
+        <div class="decline-actions">
+          <button type="button" class="btn" id="declineYes">Yes, skip it</button>
+          <button type="button" class="linkish" id="declineNo">Go back</button>
+        </div>
+        <p class="err" id="declineErr" aria-live="polite"></p>
+      </div>
+
+      <div id="doneDecline" class="hidden">
+        <h2 id="doneDeclineHead">Thank you.</h2>
+        <p>We will not ask again about this closing.</p>
+      </div>
+
+      <div id="happy" class="hidden">
+        <p id="happyIntro"></p>
+        <ol class="steps">
+          <li>Write your review below.</li>
+          <li id="step2"></li>
+          <li id="step3">Paste your review there and submit it.</li>
+        </ol>
+        <label for="reviewText">Your review</label>
+        <textarea id="reviewText" maxlength="3000" autocomplete="off"></textarea>
+        <div class="links">
+          <a class="btn hidden" id="googleBtn" href="#" target="_blank" rel="noopener">Post on Google</a>
+          <a class="btn hidden" id="zillowBtn" href="#" target="_blank" rel="noopener">Post on Zillow</a>
+          <button type="button" class="btn hidden" id="saveBtn">Save my review</button>
+        </div>
+        <p class="copied" id="copied" aria-live="polite"></p>
+        <p class="small hidden" id="copyFallback"></p>
+        <p class="err" id="happyErr" aria-live="polite"></p>
+      </div>
+
+      <div id="low" class="hidden">
+        <h2>We're sorry we fell short.</h2>
+        <p>Please tell us what happened. This goes to our leadership team.</p>
+        <div class="private">
+          <label for="fbComment">What happened?</label>
+          <textarea id="fbComment" maxlength="3000" autocomplete="off"></textarea>
+          <label class="check"><input type="checkbox" id="fbContact"> Please contact me about this</label>
+          <div id="fbPhoneWrap" class="hidden">
+            <label for="fbPhone">Best number to reach you (optional)</label>
+            <input type="tel" id="fbPhone" maxlength="30" autocomplete="tel">
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn" id="submitFeedback" disabled>Send to our leadership</button>
+        </div>
+        <p class="err" id="lowErr" aria-live="polite"></p>
+      </div>
+
+      <div id="doneLow" class="hidden">
+        <h2 id="doneLowHead">Thank you.</h2>
+        <p>Someone on our leadership team will read this personally.</p>
+      </div>
+
+      <div id="nextUp" class="hidden">
+        <hr class="rule" aria-hidden="true">
+        <p id="nextText"></p>
+        <div class="actions">
+          <button type="button" class="btn" id="nextBtn">Review that home too</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="already" class="hidden">
+      <h1 id="addr1d"></h1>
+      <p class="addr2" id="addr2d"></p>
+      <hr class="rule" aria-hidden="true">
+      <h2 id="alreadyHead">Thank you.</h2>
+      <p>We've already received your review.</p>
+    </section>
+
+  </div>
+</main>
+<footer>The Stawasz Group | KW Empower | Philadelphia, PA</footer>
+
+<script>
+// ---- Hosted page (built by tools/build-site.js): nothing is templated. The
+// opening data, the form token and the QA token arrive from a cookie-free
+// review.init POST to the Apps Script backend.
+var INIT = null;
+var ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbwsDCu2vAUtv70y6LLIvacCS1isdvuAwHx1wHcC5XcrqjfwN3FAMtJOilfWGxSYfmaI5Q/exec';
+var SUBMIT_TOKEN = '';
+var QA_TEST_TOKEN = '';
+// Cross-site fetch sends no Google cookies, so Google never routes this call
+// through the visitor's account. Never ask fetch to include credentials here.
+window.__hostedInit = function (done) {
+  var q = new URLSearchParams(window.location.search);
+  var body = { action: 'review.init', k: q.get('k') || '', e: q.get('e') || '', r: q.get('r') || '', qatest: q.get('qatest') || '', website: '' };
+  fetch(ENDPOINT, { method: 'POST', body: JSON.stringify(body) })
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+      if (res && res.ok && res.init) { INIT = res.init; SUBMIT_TOKEN = res.submitToken || ''; QA_TEST_TOKEN = res.qaTestToken || ''; }
+      else INIT = { ok: false, state: (res && res.state === 'notfound') ? 'notfound' : 'error' };
+      done();
+    })
+    .catch(function () { INIT = { ok: false, state: 'error' }; done(); });
+};
+// ---- End hosted hand-off.
+
+// Posts go to the review route (?page=review), which the server answers before
+// anything else reads the body. The server hands over the plain /exec URL.
+var ENDPOINT = ENDPOINT_URL + (ENDPOINT_URL.indexOf('?') === -1 ? '?' : '&') + 'page=review';
+
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var state = {
+    rating: 0, path: null, status: 'new', token: null, locked: false,
+    firstName: '', addr1: '', addr2: '', role: 'unknown',
+    email: '', propertyKey: null, emailRating: 0, emailRatingSpent: false, emailRatingKey: null, agentName: '',
+    properties: [], links: null, reviewText: '', saved: false, pageKey: '',
+    code: '',  // the signed link's code, sent back with every post; the email is blank then
+    declining: false   // the "rather not" confirm is open
+  };
+  function isDone(s) { return s === 'reviewed' || s === 'feedback' || s === 'declined'; }
+
+  // ---- Copy, tailored to the contact.
+  function greeting() {
+    var hi = state.firstName ? 'Hi ' + state.firstName + '. ' : '';
+    if (state.role === 'buyer') return hi + 'It was a pleasure getting you to the closing table on this purchase. We’re excited for your next chapter.';
+    if (state.role === 'seller') return hi + 'It was a pleasure getting you to the closing table on this sale. We’re excited for your next chapter.';
+    return hi + 'It was a pleasure getting you to the closing table. We’re excited for your next chapter.';
+  }
+  function happyIntro() {
+    var who = state.role === 'buyer' ? 'buyers' : state.role === 'seller' ? 'sellers' : 'clients';
+    return 'Reviews are one of the main ways other ' + who + ' find us. If you were happy with how this one went, we’d be grateful if you said so in your own words, so others know what to expect.';
+  }
+  // A plain label for which transaction this is. Factual identification only:
+  // the page never asks the client to write about a named person.
+  function dealLabel(p) {
+    var what = p.role === 'buyer' ? 'Your purchase' : p.role === 'seller' ? 'Your sale' : 'Your closing';
+    return what + (p.agentName ? ' with ' + p.agentName : '');
+  }
+
+  function show(id) {
+    ['loading', 'notfound', 'failed', 'choose', 'rate', 'already'].forEach(function (s) { $(s).classList.toggle('hidden', s !== id); });
+  }
+  function openProperties() {
+    return state.properties.filter(function (p) { return !isDone(p.status); });
+  }
+  function propByKey(k) {
+    for (var i = 0; i < state.properties.length; i++) if (state.properties[i].key === k) return state.properties[i];
+    return null;
+  }
+  function fillHeadlines() {
+    ['addr1', 'addr1d'].forEach(function (id) { $(id).textContent = state.addr1 || 'Your home'; });
+    ['addr2', 'addr2d'].forEach(function (id) { $(id).textContent = state.addr2 || ''; $(id).classList.toggle('hidden', !state.addr2); });
+    var n = state.firstName ? 'Thank you, ' + state.firstName + '.' : 'Thank you.';
+    $('doneLowHead').textContent = n; $('alreadyHead').textContent = n; $('doneDeclineHead').textContent = n;
+  }
+
+  // ---- Choosing between homes. Shown only when more than one is unreviewed.
+  function renderChooser() {
+    var open = openProperties();
+    var n = state.properties.length;
+    $('chooseIntro').textContent = (state.firstName ? 'Hi ' + state.firstName + '. ' : '') +
+      'We got you to the closing table ' + numberWord(n) + ' times. Tell us about whichever you like, and we’ll ask about ' +
+      (n > 2 ? 'the others' : 'the other') + ' after.';
+    var box = $('picks');
+    box.innerHTML = '';
+    state.properties.forEach(function (p) {
+      var done = isDone(p.status);
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'pick';
+      if (done) b.disabled = true;
+      var lab = document.createElement('span'); lab.className = 'a2 label'; lab.textContent = dealLabel(p); b.appendChild(lab);
+      var a1 = document.createElement('span'); a1.className = 'a1'; a1.textContent = p.line1 || 'Your closing';
+      b.appendChild(a1);
+      if (p.line2) { var a2 = document.createElement('span'); a2.className = 'a2'; a2.textContent = p.line2; b.appendChild(a2); }
+      if (done) { var d = document.createElement('span'); d.className = 'done'; d.textContent = p.status === 'declined' ? 'Thank you.' : 'Already reviewed. Thank you.'; b.appendChild(d); }
+      if (!done) b.addEventListener('click', function () { selectProperty(p.key); });
+      box.appendChild(b);
+    });
+    show('choose');
+  }
+  function numberWord(n) { return ({ 2: 'two', 3: 'three', 4: 'four', 5: 'five' })[n] || String(n); }
+
+  function selectProperty(key) {
+    var p = propByKey(key);
+    if (!p) return;
+    state.propertyKey = p.key;
+    state.addr1 = p.line1; state.addr2 = p.line2; state.role = p.role; state.agentName = p.agentName || '';
+    state.status = p.status; state.token = p.token || null;
+    state.rating = 0; state.path = null; state.locked = false; state.saved = false;
+    state.reviewText = ''; state.declining = false;
+    $('declineErr').textContent = ''; $('declineYes').disabled = false;
+    reviewText.value = ''; reviewText.readOnly = false; fbComment.value = ''; fbContact.checked = false;
+    $('fbPhone').value = ''; $('fbPhoneWrap').classList.add('hidden');
+    submitFeedback.disabled = true; $('copied').textContent = ''; $('happyErr').textContent = '';
+    $('lowErr').textContent = ''; $('copyFallback').classList.add('hidden');
+    $('starsHint').textContent = ''; $('retryWrap').classList.add('hidden'); $('saveBtn').disabled = false;
+    $('stars').classList.remove('locked'); $('stars').removeAttribute('aria-label'); $('rateQ').classList.remove('hidden');
+    starEls.forEach(function (el) { el.disabled = false; el.removeAttribute('aria-disabled'); });
+    $('nextUp').classList.add('hidden');
+    $('backWrap').classList.toggle('hidden', openProperties().length < 2);
+    fillHeadlines();
+    $('dealLabel').textContent = dealLabel(p);
+    $('greeting').textContent = greeting();
+    // The star tapped in the email answers the first closing only, and stays
+    // locked on it: coming Back to that closing shows the same locked star.
+    if (state.emailRating && !state.emailRatingSpent) {
+      state.emailRatingSpent = true;
+      state.emailRatingKey = p.key;
+      p.lockedRating = state.emailRating;
+    }
+    if (p.lockedRating) {
+      paintStars(p.lockedRating, false); lockStars(p.lockedRating);
+      // Sent once. If that post never landed (no token yet), send it again.
+      if (p.token) { state.rating = p.lockedRating; state.path = pathFor(p.lockedRating); renderPath(); }
+      else chooseRating(p.lockedRating);
+    } else if (p.savedRating >= 1 && p.savedRating <= 5) {
+      // A home this client rated earlier, on this page or before: its star is
+      // back. The page is never handed the row token on load, only a star tap
+      // earns it, so a reopened page asks again with the same star before the
+      // client can write anything (2026-09-22: "This page has expired" on a
+      // reopened link, because the feedback went out with no token).
+      state.rating = p.savedRating; state.path = pathFor(p.savedRating);
+      paintStars(p.savedRating, false); renderPath();
+      if (!p.token) sendRating(p.savedRating);
+    } else {
+      paintStars(0, false); renderPath();
+    }
+    window.scrollTo(0, 0);
+  }
+  $('backBtn').addEventListener('click', renderChooser);
+  $('nextBtn').addEventListener('click', function () {
+    var open = openProperties();
+    if (open.length) selectProperty(open[0].key);
+  });
+
+  // ---- Stars: five buttons. Tap, or Tab to one and press Space or Enter.
+  // Locked when the rating came from the email (the star was the answer), and
+  // locked once this closing's review or feedback is saved.
+  var starEls = Array.prototype.slice.call(document.querySelectorAll('#stars .star'));
+  function paintStars(v, animate) {
+    starEls.forEach(function (el) {
+      var on = Number(el.dataset.v) <= v, was = el.classList.contains('on');
+      el.classList.toggle('on', on);
+      el.setAttribute('aria-pressed', Number(el.dataset.v) === v ? 'true' : 'false');
+      if (animate && on && !was) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+    });
+  }
+  function lockStars(v) {
+    state.locked = true;
+    $('stars').classList.add('locked');
+    $('stars').setAttribute('aria-label', 'You rated us ' + v + (v === 1 ? ' star' : ' stars'));
+    $('rateQ').classList.add('hidden');
+    starEls.forEach(function (el) { el.disabled = true; el.setAttribute('aria-disabled', 'true'); });
+  }
+  starEls.forEach(function (el) {
+    el.addEventListener('click', function () { if (!state.locked) chooseRating(Number(el.dataset.v)); });
+  });
+  function pathFor(r) { return r >= 4 ? 'happy' : 'low'; }
+
+  function chooseRating(v) {
+    paintStars(v, true);
+    state.rating = v;
+    state.path = pathFor(v);
+    renderPath();
+    sendRating(v);
+  }
+  var rateSeq = 0;
+  function sendRating(v) {
+    var seq = ++rateSeq;
+    var key = state.propertyKey;
+    $('starsHint').textContent = ''; $('retryWrap').classList.add('hidden');
+    // The email's star goes with the closing it locked, and no other.
+    var fromEmail = state.emailRatingKey === key ? state.emailRating : 0;
+    post('review.rate', { rating: v, emailRating: fromEmail, locked: state.locked }).then(function (res) {
+      if (seq !== rateSeq || key !== state.propertyKey) return;
+      if (!res || !res.ok) {
+        $('starsHint').textContent = (res && res.error) || 'We couldn’t save that. Please try again.';
+        // A locked star cannot be tapped again, so offer the retry instead.
+        if (state.locked) $('retryWrap').classList.remove('hidden');
+        return;
+      }
+      var p = propByKey(key);
+      if (p && !isDone(res.status)) p.savedRating = v;
+      applyServer(res, false);
+    });
+  }
+  $('retryRate').addEventListener('click', function () { if (state.rating) sendRating(state.rating); });
+
+  // mine: this answer is to this page's own save. A star tap that comes back
+  // finished means the closing was completed elsewhere (another tab or
+  // device): it is thanked for, never reopened.
+  function applyServer(res, mine) {
+    var p = propByKey(state.propertyKey);
+    if (res.token) { state.token = res.token; if (p) p.token = res.token; }
+    if (res.links) { state.links = res.links; wireLinks(); }
+    if (isDone(res.status) && !mine) {
+      if (p) { p.status = 'reviewed'; p.token = null; }
+      if (openProperties().length) { renderChooser(); return; }
+      fillHeadlines(); show('already');
+      return;
+    }
+    if (res.status) state.status = res.status;
+    if (p) p.status = state.status;
+    if (isDone(state.status)) {
+      state.saved = true;
+      reviewText.readOnly = true;   // what was saved is what gets pasted
+      if (state.rating) lockStars(state.rating);
+      else if (state.status === 'declined') {
+        // No star to lock on: the stars leave the screen, and stay dead.
+        state.locked = true;
+        starEls.forEach(function (el) { el.disabled = true; el.setAttribute('aria-disabled', 'true'); });
+      }
+    }
+    renderPath();
+    offerNext();
+  }
+  // Once a home is finished, offer the next one that is still open.
+  function offerNext() {
+    var open = openProperties();
+    var show = isDone(state.status) && open.length > 0;
+    $('nextUp').classList.toggle('hidden', !show);
+    if (show) {
+      $('nextText').textContent = open.length === 1
+        ? 'We also closed ' + (open[0].line1 || 'another deal') + ' with you. Would you tell us about that one too?'
+        : 'We also closed ' + open.length + ' other deals with you. Would you tell us about the next one?';
+      $('nextBtn').textContent = 'Tell us about ' + (open[0].line1 || 'that one') + ' too';
+    }
+  }
+  function renderPath() {
+    show('rate');
+    var unrated = !state.path;
+    var declined = state.status === 'declined';
+    // "I'd rather not leave a review": only while the stars are untouched on
+    // an open closing. A tapped or locked (email) star already answered, and
+    // a finished closing is not asked. The confirm replaces the review box
+    // until the client decides.
+    var canDecline = !state.rating && !state.locked && !isDone(state.status);
+    $('declineWrap').classList.toggle('hidden', !(canDecline && !state.declining));
+    $('declineConfirm').classList.toggle('hidden', !(canDecline && state.declining));
+    $('doneDecline').classList.toggle('hidden', !declined);
+    $('rateQ').classList.toggle('hidden', declined || state.locked);
+    $('stars').classList.toggle('hidden', declined);
+    $('starsHint').classList.toggle('hidden', declined);
+    $('happy').classList.toggle('hidden', !(state.path === 'happy' || unrated) || declined || state.declining);
+    $('low').classList.toggle('hidden', state.path !== 'low' || state.status === 'feedback');
+    $('doneLow').classList.toggle('hidden', !(state.path === 'low' && state.status === 'feedback'));
+    reviewText.disabled = unrated;
+    $('happyIntro').textContent = unrated ? 'Tap a star to begin.' : happyIntro();
+    stepsText();
+    updateLinkState();
+  }
+
+  // ---- Declining. One confirm step, then review.decline: the server marks
+  // the closing declined and it is final, exactly as a saved review is. The
+  // post carries what a star tap carries (code or email, page key, closing),
+  // since no star was tapped and there is no row token yet.
+  $('declineBtn').addEventListener('click', function () { if (!state.rating && !state.locked) { state.declining = true; renderPath(); } });
+  $('declineNo').addEventListener('click', function () { state.declining = false; renderPath(); });
+  $('declineYes').addEventListener('click', function () {
+    var btn = $('declineYes');
+    if (btn.disabled || state.rating || state.locked || isDone(state.status)) return;
+    btn.disabled = true;
+    $('declineErr').textContent = '';
+    var key = state.propertyKey;
+    post('review.decline', {}).then(function (res) {
+      btn.disabled = false;
+      if (key !== state.propertyKey) return;
+      if (!res || !res.ok) { $('declineErr').textContent = (res && res.error) || 'We couldn’t save that. Please try again.'; return; }
+      state.declining = false;
+      // Anything but "declined" means the closing was finished elsewhere: it is
+      // thanked for, never reopened.
+      applyServer(res, res.status === 'declined');
+    });
+  });
+  // The steps name only the sites that have a link.
+  function stepsText() {
+    var l = state.links || {};
+    var g = !!l.google, z = !!l.zillow;
+    $('step2').textContent = g && z ? 'Tap Google or Zillow. Your review is copied and the site opens in a new tab.'
+      : g ? 'Tap Post on Google. Your review is copied and Google opens in a new tab.'
+      : z ? 'Tap Post on Zillow. Your review is copied and Zillow opens in a new tab.'
+      : 'Tap Save my review.';
+    $('step3').classList.toggle('hidden', !g && !z);
+  }
+
+  // ---- Happy path: write once, then Google or Zillow. The first tap saves the
+  // review (Sheet and FUB) and the save is final. Every tap copies the text and
+  // opens the site; a tap after the save only records which site was opened.
+  // The site buttons do not exist on screen until the client is on the 4 or 5
+  // star path and has written something.
+  var reviewText = $('reviewText');
+  reviewText.addEventListener('input', updateLinkState);
+  function updateLinkState() {
+    var links = state.links;
+    var ready = state.path === 'happy' && !reviewText.disabled && reviewText.value.trim().length > 0;
+    var g = !!(links && links.google), z = !!(links && links.zillow);
+    $('googleBtn').classList.toggle('hidden', !(ready && g));
+    $('zillowBtn').classList.toggle('hidden', !(ready && z));
+    // Neither site configured: the review can still be saved.
+    $('saveBtn').classList.toggle('hidden', !(ready && links && !g && !z && !state.saved));
+  }
+  function wireLinks() {
+    var links = state.links || {};
+    setLink($('googleBtn'), links.google, 'google');
+    setLink($('zillowBtn'), links.zillow, 'zillow');
+    updateLinkState();
+  }
+  function setLink(el, url, site) {
+    el.href = url || '#';
+    el.onclick = function (ev) {
+      var text = reviewText.value.trim();
+      if (!url || !text || el.classList.contains('hidden')) { ev.preventDefault(); return; }
+      state.reviewText = text;
+      var ok = copyText(text);
+      $('copied').textContent = ok ? 'Copied. Paste it into your review.' : 'Your review is below so you can copy it.';
+      if (!ok) { var fb = $('copyFallback'); fb.textContent = text; fb.classList.remove('hidden'); }
+      if (state.saved) post('review.click', { site: site });
+      else saveReview(site);
+      // default navigation continues: the site opens in a new tab
+    };
+  }
+  function saveReview(site) {
+    var text = reviewText.value.trim();
+    state.reviewText = text;
+    $('happyErr').textContent = '';
+    return post('review.submit', { rating: state.rating, text: text, site: site }).then(function (res) {
+      if (!res || !res.ok) { $('happyErr').textContent = (res && res.error) || 'We couldn’t save your review. Please try again.'; return false; }
+      // Marks this home done and, when another is still open, offers it.
+      applyServer(res, true);
+      return true;
+    });
+  }
+  $('saveBtn').addEventListener('click', function () {
+    var btn = $('saveBtn');
+    if (state.saved || btn.disabled || !reviewText.value.trim()) return;
+    btn.disabled = true;
+    saveReview('').then(function (saved) {
+      btn.disabled = false;
+      if (saved) $('copied').textContent = 'Thank you. Your review is saved.';
+    });
+  });
+  function copyText(text) {
+    var ok = false;
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed'; ta.style.top = '0'; ta.style.left = '0'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select(); ta.setSelectionRange(0, text.length);
+      ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+    } catch (e) { ok = false; }
+    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () {}, function () {}); } catch (e2) {}
+    return ok;
+  }
+
+  // ---- Low path
+  var fbComment = $('fbComment'), submitFeedback = $('submitFeedback'), fbContact = $('fbContact');
+  fbComment.addEventListener('input', function () { submitFeedback.disabled = fbComment.value.trim().length === 0; });
+  fbContact.addEventListener('change', function () { $('fbPhoneWrap').classList.toggle('hidden', !fbContact.checked); });
+  submitFeedback.addEventListener('click', function () {
+    var comment = fbComment.value.trim();
+    if (!comment || state.saved) return;
+    submitFeedback.disabled = true; submitFeedback.textContent = 'Sending';
+    $('lowErr').textContent = '';
+    post('review.feedback', {
+      rating: state.rating, comment: comment,
+      contactMe: fbContact.checked, phone: fbContact.checked ? $('fbPhone').value.trim() : ''
+    }).then(function (res) {
+      submitFeedback.textContent = 'Send to our leadership';
+      if (!res || !res.ok) { submitFeedback.disabled = false; $('lowErr').textContent = (res && res.error) || 'We couldn’t send that. Please try again.'; return; }
+      applyServer(res, true);
+    });
+  });
+
+  // ---- Transport: a JSON POST to the review route.
+  // One silent retry before admitting failure. On 2026-09-18 a QA submission
+  // was saved by the server in 3.5 s while the browser reported "couldn't
+  // reach the server"; every action is idempotent on the server, so a second
+  // attempt is safe and usually confirms what already happened.
+  function post(action, data, attempt) {
+    var body = { action: action, formToken: SUBMIT_TOKEN, qaTestToken: QA_TEST_TOKEN, token: state.token, email: state.email, code: state.code, propertyKey: state.propertyKey, pageKey: state.pageKey, website: '' };
+    for (var k in data) if (Object.prototype.hasOwnProperty.call(data, k)) body[k] = data[k];
+    return fetch(ENDPOINT, { method: 'POST', body: JSON.stringify(body) })
+      .then(function (r) { return r.json(); })
+      .catch(function () {
+        if (!attempt) return new Promise(function (resolve) { setTimeout(resolve, 1500); }).then(function () { return post(action, data, 1); });
+        return { ok: false, error: 'We couldn’t confirm that went through. Please try once more. If this message comes back, reply to the email you received and we will record it by hand.' };
+      });
+  }
+
+  // ---- Boot
+  function boot() {
+    if (!INIT || !INIT.ok) { show(INIT && INIT.state === 'notfound' ? 'notfound' : 'failed'); return; }
+    state.firstName = INIT.firstName || '';
+    state.email = INIT.email || '';
+    state.code = INIT.code || '';
+    state.properties = INIT.properties || [];
+    state.links = INIT.links || null;
+    state.emailRating = Number(INIT.rating) || 0;
+    state.pageKey = INIT.pageKey || '';
+    if (state.links) wireLinks();
+
+    var n = state.firstName ? 'Thank you, ' + state.firstName + '.' : 'Thank you.';
+    $('doneLowHead').textContent = n; $('alreadyHead').textContent = n;
+
+    var open = openProperties();
+    if (!state.properties.length) {
+      // Nothing parsed from FUB: the row is on Hold and someone will follow up.
+      show('notfound');
+      return;
+    }
+    if (!open.length) {
+      var last = state.properties[0];
+      state.addr1 = last.line1; state.addr2 = last.line2;
+      fillHeadlines();
+      show('already');
+      return;
+    }
+    if (open.length > 1) { renderChooser(); return; }
+    selectProperty(open[0].key);
+  }
+  window.__hostedInit(boot);
+})();
+</script>
+</body>
+</html>
