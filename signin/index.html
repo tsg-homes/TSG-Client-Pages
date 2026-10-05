@@ -3,162 +3,345 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<base target="_top">
 <title>Open House Sign-In | The Stawasz Group</title>
+<base target="_top">
+<!-- TSG Design System for the Apps Script form pages (2026-10-01, per Durand).
+     Tokens and component rules come from the TSG Design System artifact
+     (project/tokens.json, project/components/bundle.css); the form-control
+     rules below are this project's own, built on those tokens. Included in
+     every page's <head> via the include('Styles') scriptlet. Light and dark themes
+     follow the viewer's system setting; style through the tokens only. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
-:root{
-  --tsg-green:#15464A;
-  --tsg-green-dark:#0d2e31;
-  --tsg-gray:#f4f5f5;
-  --tsg-gray-border:#dfe3e3;
-  --tsg-white:#ffffff;
-  --tsg-red:#a5342b;
-}
-*{box-sizing:border-box;}
-body{margin:0;font-family:'Lato',Arial,sans-serif;background:var(--tsg-gray);color:#1c1c1c;-webkit-font-smoothing:antialiased;}
-header{background:var(--tsg-green);color:var(--tsg-white);padding:32px 20px 28px;text-align:center;}
-header .wordmark{font-family:'Playfair Display',serif;font-weight:700;font-size:26px;letter-spacing:1px;}
-header .subtitle{margin-top:6px;font-size:14px;letter-spacing:2px;text-transform:uppercase;opacity:0.85;}
-main{max-width:520px;margin:0 auto;padding:24px 16px 80px;}
-fieldset{background:var(--tsg-white);border:1px solid var(--tsg-gray-border);border-radius:8px;padding:20px 22px 22px;margin-bottom:18px;}
-legend{font-family:'Playfair Display',serif;font-weight:700;font-size:18px;color:var(--tsg-green);padding:0 6px;}
-.field{margin-top:16px;}
-.field:first-of-type{margin-top:6px;}
-label{display:block;font-weight:700;font-size:14px;margin-bottom:6px;}
-.req{color:var(--tsg-red);}
-input[type=text],input[type=email],input[type=tel],select,textarea{width:100%;padding:10px 12px;border:1px solid var(--tsg-gray-border);border-radius:6px;font-size:15px;font-family:inherit;background:var(--tsg-white);}
-textarea{resize:vertical;min-height:70px;}
-.errmsg{font-size:12px;color:var(--tsg-red);margin-top:4px;min-height:14px;}
-.consent-row{display:flex;align-items:flex-start;gap:10px;margin-top:18px;}
-.consent-row input{margin-top:3px;width:auto;}
-.consent-row label{font-weight:400;font-size:13px;margin-bottom:0;}
-button{background:var(--tsg-green);color:var(--tsg-white);border:none;border-radius:6px;padding:16px;font-size:17px;font-weight:700;font-family:'Lato',Arial,sans-serif;cursor:pointer;width:100%;margin-top:4px;}
-button:active{background:var(--tsg-green-dark);}
-button:disabled{opacity:0.5;cursor:not-allowed;}
-#submitErr{font-size:13px;color:var(--tsg-red);margin-top:10px;text-align:center;min-height:16px;}
-#website{position:absolute;left:-9999px;top:-9999px;}
-#successBox{display:none;background:var(--tsg-white);border:1px solid var(--tsg-gray-border);border-radius:8px;padding:32px 22px;text-align:center;}
-#successBox h2{font-family:'Playfair Display',serif;color:var(--tsg-green);margin-top:0;}
-#formWrap.hidden{display:none;}
-footer{text-align:center;font-size:11px;color:#8a9494;padding:24px 16px;}
-/* QA test mode banner. Deliberately loud, deliberately fixed to the top of the
-   viewport, and deliberately NOT in the TSG palette -- it must be impossible
-   to scroll past or mistake for part of the real form. Hidden unless doGet
-   handed the page a QA test token (see the script block below). */
-#qaTestBanner{display:none;position:fixed;top:0;left:0;right:0;z-index:9999;
-  background:#b3271e;color:#fff;font-weight:700;font-size:14px;line-height:1.35;
-  text-align:center;padding:12px 14px;letter-spacing:0.3px;
-  border-bottom:4px solid #ffd400;box-shadow:0 2px 8px rgba(0,0,0,0.25);}
+  :root {
+    --brand: #15464A; --brand-ink: #FFFFFF; --brand-deep: #0D3134; --brand-tint: #E3EDED;
+    --heading: #15464A; --ground: #F1F1F1; --surface: #FFFFFF; --input: #F3F3F3;
+    --line: #CCCCCC; --line-soft: #E2E6E6; --gray-dark: #999999;
+    --ink: #0F2426; --ink-2: #3E4F50; --muted: #5A6A6B; --on-band-muted: #BCD6D4;
+    --good: #1F7A4D; --good-bg: #E4F2EA; --warn: #B4541F; --warn-ink: #9A4418; --warn-bg: #FBEBDF;
+    --critical: #B3261E; --critical-bg: #FBE4E2;
+    --font-sans: Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'Roboto Mono', ui-monospace, Menlo, monospace;
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px;
+    --space-8: 32px; --space-10: 40px; --space-14: 56px; --space-20: 80px;
+    --radius-sm: 4px; --radius-md: 8px; --radius-pill: 999px;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --brand: #0F3A3D; --brand-ink: #E8F1F1; --brand-deep: #0A2A2C; --brand-tint: #1B3A3D;
+      --heading: #9FD3D6; --ground: #0C1A1C; --surface: #12262A; --input: #17302F;
+      --line: #2E4A4D; --line-soft: #223B3E; --gray-dark: #5E7374;
+      --ink: #E6EEEE; --ink-2: #C3D2D3; --muted: #9FB3B4; --on-band-muted: #A9C9C8;
+      --good: #5CC48E; --good-bg: #15392A; --warn: #E89A66; --warn-ink: #E89A66; --warn-bg: #3A2619;
+      --critical: #F08A82; --critical-bg: #3D1C1A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --brand: #0F3A3D; --brand-ink: #E8F1F1; --brand-deep: #0A2A2C; --brand-tint: #1B3A3D;
+    --heading: #9FD3D6; --ground: #0C1A1C; --surface: #12262A; --input: #17302F;
+    --line: #2E4A4D; --line-soft: #223B3E; --gray-dark: #5E7374;
+    --ink: #E6EEEE; --ink-2: #C3D2D3; --muted: #9FB3B4; --on-band-muted: #A9C9C8;
+    --good: #5CC48E; --good-bg: #15392A; --warn: #E89A66; --warn-ink: #E89A66; --warn-bg: #3A2619;
+    --critical: #F08A82; --critical-bg: #3D1C1A;
+  }
+
+  /* Base */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body.tsg { font-family: var(--font-sans); color: var(--ink); background: var(--ground); font-size: 15px; line-height: 1.5;
+    min-height: 100vh; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
+  .tsg-mono { font-family: var(--font-mono); font-weight: 500; font-variant-numeric: tabular-nums; }
+  a { color: var(--heading); }
+  a:hover { color: var(--brand-deep); }
+
+  /* Header band (Design System component) */
+  .tsg-band { background: var(--brand); color: var(--brand-ink); padding: var(--space-10) var(--space-20) var(--space-8);
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: var(--space-4) var(--space-10); }
+  .tsg-band__eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--on-band-muted); margin: 0 0 var(--space-2); }
+  .tsg-band__title { margin: 0; font-size: 44px; line-height: 1.1; font-weight: 900; letter-spacing: -.01em; text-wrap: balance; }
+  .tsg-band__sub { margin: var(--space-2) 0 0; font-size: 15px; color: var(--on-band-muted); }
+  .tsg-band__meta { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-2); font-size: 13px; }
+  .tsg-band__chips { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: flex-end; }
+  .tsg-band__chip { padding: 4px 10px; border-radius: var(--radius-pill); background: var(--brand-deep); color: var(--brand-ink); font-size: 12px; font-weight: 500; }
+  @media (max-width: 600px) {
+    .tsg-band { padding: var(--space-6) var(--space-4) var(--space-5); }
+    .tsg-band__title { font-size: 28px; }
+    .tsg-band__meta { align-items: flex-start; }
+    .tsg-band__chips { justify-content: flex-start; }
+  }
+
+  /* Footer (Design System component). Client-facing pages omit it. */
+  .tsg-footer { margin-top: auto; background: var(--brand); color: var(--brand-ink); padding: 14px var(--space-4); text-align: center;
+    font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+
+  /* Page frame: 90% of the screen width, centered; full width with a 16px gutter on phones. */
+  .tsg-page { width: 90%; max-width: 1400px; margin: 0 auto; padding: var(--space-8) 0 var(--space-14); flex: 1 0 auto; }
+  @media (max-width: 600px) { .tsg-page { width: 100%; padding: var(--space-5) var(--space-4) var(--space-8); } }
+  /* A form column stays readable inside the frame. */
+  .tsg-form { max-width: 760px; }
+  .tsg-intro { font-size: 15px; color: var(--ink-2); margin: 0 0 var(--space-5); max-width: 760px; }
+  .tsg-intro strong { color: var(--heading); }
+
+  /* Section label (Design System component) */
+  .tsg-section { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-4); margin: var(--space-8) 0 var(--space-4); }
+  .tsg-section__label { margin: 0; font-size: 14px; line-height: 20px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: var(--heading); }
+  .tsg-section__note { font-size: 14px; color: var(--muted); }
+  .tsg-section--rule { border-bottom: 2px solid var(--heading); padding-bottom: 6px; }
+  @media (max-width: 600px) { .tsg-section__label { font-size: 12px; } }
+
+  /* Callout (Design System component) */
+  .tsg-callout { background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--radius-md); padding: var(--space-5) var(--space-6);
+    display: grid; grid-template-columns: auto 1fr; gap: var(--space-1) var(--space-3); align-items: start; margin: 0 0 var(--space-5); max-width: 760px; }
+  .tsg-callout__tag { grid-row: span 2; font-size: 11px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: var(--brand-ink);
+    background: var(--brand); border-radius: var(--radius-sm); padding: 4px 8px; line-height: 16px; }
+  .tsg-callout__title { margin: 0; font-size: 15px; font-weight: 700; color: var(--ink); }
+  .tsg-callout__body { margin: 0; font-size: 14px; line-height: 1.55; color: var(--ink-2); }
+  .tsg-callout--warn { background: var(--warn-bg); border-color: var(--warn-bg); }
+  .tsg-callout--warn .tsg-callout__tag { background: var(--warn-ink); color: var(--surface); }
+  .tsg-callout--warn .tsg-callout__title, .tsg-callout--warn .tsg-callout__body { color: var(--warn-ink); }
+
+  /* Status pill (Design System component) */
+  .tsg-pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 700; line-height: 18px; white-space: nowrap; }
+  .tsg-pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .tsg-pill--good { background: var(--good-bg); color: var(--good); }
+  .tsg-pill--warn { background: var(--warn-bg); color: var(--warn-ink); }
+  .tsg-pill--critical { background: var(--critical-bg); color: var(--critical); }
+  .tsg-pill--neutral { background: var(--input); color: var(--ink-2); }
+
+  /* Form controls (this project's rules, on the system tokens) */
+  .field { background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--radius-md); padding: var(--space-4) var(--space-5); margin-bottom: var(--space-3); }
+  label.qlabel, .qlabel { display: block; font-weight: 700; font-size: 14px; color: var(--ink); margin-bottom: var(--space-2); }
+  .req { color: var(--critical); }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.45; }
+  .hint--err { color: var(--critical); }
+  .hint--warn { color: var(--warn-ink); }
+  input[type=text], input[type=email], input[type=tel], input[type=date], input[type=number], input[type=url], select, textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--input); color: var(--ink);
+    font-family: var(--font-sans); font-size: 15px; line-height: 1.4; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--heading); outline-offset: 1px; }
+  input[readonly] { background: var(--surface); color: var(--ink-2); }
+  input[type=file] { width: 100%; padding: 8px 0; font-family: var(--font-sans); font-size: 14px; color: var(--ink-2); }
+  textarea { min-height: 64px; resize: vertical; }
+  .opt { display: flex; align-items: center; gap: var(--space-2); margin: 6px 0; font-size: 15px; color: var(--ink); }
+  .opt input { width: auto; margin: 0; }
+  .opt-other { display: flex; align-items: center; gap: var(--space-2); margin: 6px 0; font-size: 15px; }
+  .opt-other input[type=text] { flex: 1; }
+  .opt-other input[type=radio], .opt-other input[type=checkbox] { width: auto; margin: 0; }
+  /* 2026-10-05, per Durand (live QA): yes/no questions stay radios, laid out
+     side by side; every other choice is a <select>. */
+  .tsg-yn { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-5); }
+  .tsg-yn label { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 400; font-size: 15px; cursor: pointer; }
+  .tsg-yn input { width: auto; margin: 0; }
+  /* The "Unknown / N/A" tick box under a date, and the street / city / state /
+     ZIP address block (2026-10-05). */
+  .na-check { display: inline-flex; align-items: center; gap: 6px; margin-top: var(--space-2); font-size: 14px; font-weight: 400; color: var(--ink-2); cursor: pointer; }
+  .na-check input { width: auto; margin: 0; }
+  .tsg-addr { display: grid; grid-template-columns: 1fr 5.5em 7.5em; gap: var(--space-2); }
+  .tsg-addr__street { grid-column: 1 / -1; }
+  @media (max-width: 600px) { .tsg-addr { grid-template-columns: 1fr 1fr; } .tsg-addr__city { grid-column: 1 / -1; } }
+  .lookup-row { display: flex; gap: var(--space-2); }
+  .lookup-row input { flex: 1; }
+  .tsg-btn { font-family: var(--font-sans); font-weight: 700; font-size: 14px; border: 1px solid var(--brand); border-radius: var(--radius-md);
+    padding: 10px 16px; cursor: pointer; background: var(--brand); color: var(--brand-ink); white-space: nowrap; }
+  .tsg-btn:hover { background: var(--brand-deep); border-color: var(--brand-deep); }
+  .tsg-btn:disabled { opacity: .6; cursor: not-allowed; }
+  .tsg-btn--ghost { background: var(--surface); color: var(--heading); border-color: var(--heading); }
+  .tsg-btn--ghost:hover { background: var(--brand-tint); color: var(--heading); border-color: var(--heading); }
+  .tsg-btn--sm { font-size: 12px; padding: 5px 10px; border-radius: var(--radius-sm); }
+  .tsg-btn--submit { width: 100%; font-size: 16px; padding: 14px; margin-top: var(--space-3); }
+  .tsg-btn--submit:disabled { opacity: .6; }
+  .fub-result-card { border: 1px solid var(--line-soft); border-radius: var(--radius-md); padding: 10px 12px; margin-top: var(--space-2); background: var(--surface); }
+  .fub-result-name { font-weight: 700; color: var(--ink); font-size: 14px; }
+  .fub-result-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .fub-result-actions { margin-top: var(--space-2); display: flex; gap: var(--space-2); }
+  .contact-confirmed { background: var(--brand-tint); border: 1px solid var(--heading); border-radius: var(--radius-md); padding: 10px 12px; margin-top: var(--space-2);
+    font-size: 14px; color: var(--ink); display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; }
+  .contact-confirmed strong { color: var(--heading); }
+  .locked { opacity: .45; pointer-events: none; }
+  .tsg-msg { display: none; padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-5); font-size: 14px; max-width: 760px; }
+  .tsg-msg--ok { background: var(--good-bg); color: var(--good); border: 1px solid var(--good); }
+  .tsg-msg--err { background: var(--critical-bg); color: var(--critical); border: 1px solid var(--critical); }
+  .file-list { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .link-cards { display: grid; gap: var(--space-3); max-width: 760px; }
+  a.tsg-card { display: block; background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--radius-md); padding: var(--space-4) var(--space-5);
+    text-decoration: none; color: inherit; }
+  a.tsg-card:hover, a.tsg-card:focus { border-color: var(--heading); outline: none; }
+  a.tsg-card .name { font-weight: 700; font-size: 15px; color: var(--heading); }
+  a.tsg-card .desc { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+  /* QA test banner and page-load notice (status colors only; never yellow). */
+  #qaTestBanner { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 99999; background: var(--critical); color: #FFFFFF;
+    font-family: var(--font-sans); font-size: 14px; font-weight: 700; letter-spacing: .03em; text-align: center; padding: 10px 14px; }
+  #pageLoadError { display: none; width: 90%; max-width: 760px; margin: var(--space-5) auto 0; padding: 14px 18px; background: var(--critical-bg);
+    border: 1px solid var(--critical); border-radius: var(--radius-md); color: var(--critical); font-family: var(--font-sans); font-size: 14px; line-height: 1.45; }
+</style>
+
+<style>
+  /* Page-specific rules only; everything else comes from Styles.html.
+     Honeypot: positioned off-screen rather than display:none so a
+     form-filling bot still sees and fills it. */
+  #website { position: absolute; left: -9999px; top: -9999px; }
+  #formWrap.hidden { display: none; }
+  #successBox { display: none; text-align: center; padding: var(--space-8) var(--space-5); }
+  #successBox h2 { margin: 0 0 var(--space-2); color: var(--heading); font-size: 22px; }
+  #successBox p { margin: 0 0 var(--space-4); color: var(--ink-2); }
+  .consent-row { display: flex; align-items: flex-start; gap: var(--space-2); }
+  .consent-row input { width: auto; margin: 3px 0 0; flex: 0 0 auto; }
+  .consent-row label { font-weight: 400; font-size: 13px; line-height: 1.5; color: var(--ink-2); }
+  #submitErr { margin-top: var(--space-3); margin-bottom: 0; text-align: center; }
+  /* 2026-10-05, per Durand (live QA): the success confirmation "was not
+     visible at first". It now scrolls into view, takes focus and stands out. */
+  #successBox { background: var(--good-bg); border: 2px solid var(--good); }
+  #successBox h2 { color: var(--good); font-size: 26px; }
+  #successBox:focus { outline: 3px solid var(--good); outline-offset: 2px; }
+  #missingHint { text-align: center; }
 </style>
 <meta name="tsg-hosted-page" content="built from tsg-client-forms by tools/build-site.js; backend https://script.google.com/macros/s/AKfycby9oMzIXMySG6s9qBf1r17gHML4zgtrxOPVt2uAMWvshjPlHDcouDMUITo6hm4Sa-C_lA/exec">
 </head>
-<body>
-<!-- QA TEST MODE banner -- see QA_TEST_TOKEN in the script block at the bottom
-     of this file and the QA_TEST_* block in Code.gs. Present in the markup of
-     every page load but display:none unless test mode is actually active, so a
-     normal visitor's page is visually identical to what it has always been. -->
-<div id="qaTestBanner" role="alert">QA TEST MODE — writes are real but tagged, notifications go only to Durand</div>
-<header>
-  <div class="wordmark">THE STAWASZ GROUP</div>
-  <div class="subtitle">Open House Sign-In</div>
+<body class="tsg">
+<!-- Shared page chrome (2026-10-01): the QA test banner and the page-load
+     notice, identical on every page. Included right after <body> via
+     the include('Chrome') scriptlet. Both are hidden until the page's own
+     script shows them: the banner when doGet issued a QA test token for this
+     page load (?qatest= matched the QA_TEST_SECRET script property), the
+     notice when the FUB agent roster came back empty, which only happens
+     when the project could not reach FUB (bad key, outage). No detail is
+     shown here on a public page; the error alert email carries the cause. -->
+<div id="qaTestBanner">QA TEST MODE &mdash; writes are real but tagged, notifications go only to Durand</div>
+<div id="pageLoadError" role="alert">
+  <strong>This page is not working right now.</strong> The agent list could not be loaded. You can still sign in, but tell the agent you did, so they can check it reached them. The team has been alerted.
+</div>
+
+<header class="tsg-band">
+  <div>
+    <p class="tsg-band__eyebrow">The Stawasz Group | Client Forms</p>
+    <h1 class="tsg-band__title">Open House Sign-In</h1>
+    <p class="tsg-band__sub">Thanks for stopping by. Sign in so the hosting agent can follow up with you.</p>
+  </div>
 </header>
-<main>
+<main class="tsg-page">
   <div id="formWrap">
-    <form id="signInForm" novalidate>
+    <form id="signInForm" class="tsg-form" novalidate>
       <input type="text" id="website" name="website" autocomplete="off" tabindex="-1" aria-hidden="true">
 
-      <fieldset>
-        <legend>Open House Details</legend>
-        <div class="field">
-          <label for="hostingAgent">Hosting Agent</label>
-          <!-- 2026-09-07, per Durand: the hardcoded 6-name <option> list was
-               removed. The options are now built at page load from
-               AGENT_LIST, which doGet fills from FUB's own user roster (see
-               getAgentList in Code.gs), so this dropdown can't drift from
-               who's actually active in FUB. Only the blank option is markup;
-               if the roster fetch fails, AGENT_LIST is [] and the field
-               simply stays on "Select one" instead of erroring. -->
-          <select id="hostingAgent">
-            <option value="">Select one</option>
-          </select>
+      <!-- 2026-10-05, per Durand (live QA): every question here is required.
+           Each dropdown starts on a blank "Select…" that must be changed and
+           carries an N/A option; free-text boxes accept "N/A" typed. -->
+      <p class="tsg-intro">Every question is required (<span class="req">*</span>). If one doesn't apply, choose or type N/A.</p>
+      <div class="tsg-section"><h2 class="tsg-section__label">Open House Details</h2></div>
+      <div class="field">
+        <label class="qlabel" for="hostingAgent">Hosting Agent <span class="req">*</span></label>
+        <!-- 2026-09-07, per Durand: the hardcoded 6-name <option> list was
+             removed. The options are now built at page load from
+             AGENT_LIST, which doGet fills from FUB's own user roster (see
+             getAgentList in Code.gs), so this dropdown can't drift from
+             who's actually active in FUB. Only the blank option is markup;
+             if the roster fetch fails, AGENT_LIST is [] and the field
+             simply stays on "Select one" instead of erroring. -->
+        <!-- 2026-10-05: roster agents are inserted above "Not sure / N/A".
+             Chelsey Stiles is never in the roster (FORM_EXCLUDED_AGENT_IDS in
+             Code.gs) and is never re-added from an ?agent= link. -->
+        <select id="hostingAgent">
+          <option value="">Select…</option>
+          <option value="N/A" id="hostingAgentNa">Not sure / N/A</option>
+        </select>
+      </div>
+      <!-- 2026-10-05, per Durand (live QA): street, city, state and ZIP, all
+           required. An ?address= link is split into the four boxes. This is
+           the house being visited, so it is not written to the visitor's own
+           FUB address (see buildOpenHousePersonPayload). -->
+      <div class="field">
+        <label class="qlabel" for="propertyStreet">Property Address <span class="req">*</span></label>
+        <div class="tsg-addr">
+          <input type="text" id="propertyStreet" class="tsg-addr__street" placeholder="Street address" aria-label="Street address">
+          <input type="text" id="propertyCity" class="tsg-addr__city" placeholder="City" aria-label="City">
+          <input type="text" id="propertyState" class="tsg-addr__state" placeholder="State" aria-label="State" maxlength="2">
+          <input type="text" id="propertyZip" class="tsg-addr__zip" placeholder="ZIP" aria-label="ZIP code" inputmode="numeric" maxlength="10">
         </div>
-        <div class="field">
-          <label for="propertyAddress">Property Address</label>
-          <input type="text" id="propertyAddress" placeholder="123 Main St, Philadelphia, PA">
-        </div>
-      </fieldset>
+        <div class="hint hint--err" id="addrErr"></div>
+      </div>
 
-      <fieldset>
-        <legend>Your Info</legend>
-        <div class="field">
-          <label for="visitorName">Full Name <span class="req">*</span></label>
-          <input type="text" id="visitorName">
-          <div class="errmsg" id="nameErr"></div>
-        </div>
-        <div class="field">
-          <label for="email">Email <span class="req">*</span></label>
-          <input type="email" id="email">
-          <div class="errmsg" id="emailErr"></div>
-        </div>
-        <div class="field">
-          <label for="phone">Phone <span class="req">*</span></label>
-          <input type="tel" id="phone" placeholder="(555) 555-5555" inputmode="tel">
-          <div class="errmsg" id="phoneErr"></div>
-        </div>
-      </fieldset>
+      <div class="tsg-section"><h2 class="tsg-section__label">Your Info</h2></div>
+      <div class="field">
+        <label class="qlabel" for="visitorName">Full Name <span class="req">*</span></label>
+        <input type="text" id="visitorName">
+        <div class="hint hint--err" id="nameErr"></div>
+      </div>
+      <div class="field">
+        <label class="qlabel" for="email">Email <span class="req">*</span></label>
+        <input type="email" id="email">
+        <div class="hint hint--err" id="emailErr"></div>
+      </div>
+      <div class="field">
+        <label class="qlabel" for="phone">Phone <span class="req">*</span></label>
+        <input type="tel" id="phone" placeholder="(555) 555-5555" inputmode="tel">
+        <div class="hint hint--err" id="phoneErr"></div>
+      </div>
 
-      <fieldset>
-        <legend>About Your Visit</legend>
-        <div class="field">
-          <label for="timeframe">Timeframe to Buy</label>
-          <!-- 2026-09-07, per Durand: same treatment as Hosting Agent above.
-               These labels used to be a hardcoded copy of Code.gs's
-               TIMEFRAME_IDS keys that had to match it character for
-               character; both are now read live from FUB's /v1/timeframes
-               (see getFubTimeframes). The submitted value is still the
-               display string, not the numeric id, so the wire format and the
-               background note are unchanged. -->
-          <select id="timeframe">
-            <option value="">Select one</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="howHeard">How Did You Hear About This Open House?</label>
-          <select id="howHeard">
-            <option value="">Select one</option>
-            <option value="Zillow">Zillow</option>
-            <option value="Realtor.com">Realtor.com</option>
-            <option value="Sign / Drive-by">Sign / Drive-by</option>
-            <option value="Agent Referral">Agent Referral</option>
-            <option value="Social Media">Social Media</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="notes">Notes</label>
-          <textarea id="notes"></textarea>
-        </div>
+      <div class="tsg-section"><h2 class="tsg-section__label">About Your Visit</h2></div>
+      <div class="field">
+        <label class="qlabel" for="timeframe">Timeframe to Buy <span class="req">*</span></label>
+        <!-- 2026-09-07, per Durand: same treatment as Hosting Agent above.
+             These labels used to be a hardcoded copy of Code.gs's
+             TIMEFRAME_IDS keys that had to match it character for
+             character; both are now read live from FUB's /v1/timeframes
+             (see getFubTimeframes). The submitted value is still the
+             display string, not the numeric id, so the wire format and the
+             background note are unchanged. -->
+        <select id="timeframe">
+          <option value="">Select…</option>
+          <option value="N/A" id="timeframeNa">Not sure / N/A</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="qlabel" for="howHeard">How Did You Hear About This Open House? <span class="req">*</span></label>
+        <!-- 2026-10-05: nothing is preselected; "Select…" must be changed. -->
+        <select id="howHeard">
+          <option value="">Select…</option>
+          <option value="Zillow">Zillow</option>
+          <option value="Realtor.com">Realtor.com</option>
+          <option value="Sign / Drive-by">Sign / Drive-by</option>
+          <option value="Agent Referral">Agent Referral</option>
+          <option value="Social Media">Social Media</option>
+          <option value="Other">Other</option>
+          <option value="N/A">N/A</option>
+        </select>
+      </div>
+      <!-- 2026-10-01, per Durand: optional referrer, written to FUB's
+           "Referred By" custom field and linked as a Referred By
+           relationship -- same field the intake form has. -->
+      <div class="field">
+        <label class="qlabel" for="referredBy">Who referred you to us? <span class="req">*</span></label>
+        <input type="text" name="referredBy" id="referredBy" maxlength="200">
+        <div class="hint">If someone sent you our way, name them so we can thank them. Otherwise enter N/A.</div>
+      </div>
+      <div class="field">
+        <label class="qlabel" for="notes">Notes <span class="req">*</span></label>
+        <textarea id="notes"></textarea>
+        <div class="hint">Anything the agent should know. Enter N/A if nothing.</div>
+      </div>
 
+      <div class="field">
         <div class="consent-row">
           <input type="checkbox" id="consent">
           <label for="consent">By checking this box, I agree to be contacted by The Stawasz Group and its agents by phone, text message, and email — including by autodialer or prerecorded message — about this and other properties. Consent is not a condition of any purchase or service. Message and data rates may apply. Reply STOP to opt out at any time. <span class="req">*</span></label>
         </div>
-      </fieldset>
+      </div>
 
-      <button type="button" id="submitBtn" disabled>Sign In</button>
-      <div id="submitErr"></div>
+      <button type="button" id="submitBtn" class="tsg-btn tsg-btn--submit" disabled>Sign In</button>
+      <div class="hint" id="missingHint"></div>
+      <div id="submitErr" class="tsg-msg tsg-msg--err"></div>
     </form>
   </div>
 
-  <div id="successBox">
+  <div id="successBox" class="field" tabindex="-1" role="status" aria-live="polite">
     <h2>Thanks, you're signed in!</h2>
     <p>We've sent your information to the hosting agent.</p>
-    <button type="button" id="resetBtn">Sign In Another Visitor</button>
+    <button type="button" id="resetBtn" class="tsg-btn">Sign In Another Visitor</button>
   </div>
 </main>
-<footer>THE STAWASZ GROUP | KW Empower</footer>
 
 <script>
 (function () {
@@ -166,14 +349,7 @@ footer{text-align:center;font-size:11px;color:#8a9494;padding:24px 16px;}
   var body = { action: 'page.init', form: "open-house", qatest: q.get('qatest') || '', website: '' };
   function fail() {
     var el = document.getElementById('pageLoadError');
-    if (!el) {
-      el = document.createElement('div');
-      el.setAttribute('role', 'alert');
-      el.style.cssText = 'background:#FBE4E2;color:#B3261E;font:15px/22px Roboto,Helvetica Neue,Arial,sans-serif;padding:12px 16px;text-align:center';
-      el.textContent = 'This page is not working right now. Please try again in a few minutes.';
-      document.body.insertBefore(el, document.body.firstChild);
-    }
-    el.style.display = 'block';
+    if (el) el.style.display = 'block';
   }
   fetch("https://script.google.com/macros/s/AKfycby9oMzIXMySG6s9qBf1r17gHML4zgtrxOPVt2uAMWvshjPlHDcouDMUITo6hm4Sa-C_lA/exec", { method: 'POST', body: JSON.stringify(body) })
     .then(function (r) { return r.json(); })
@@ -223,43 +399,99 @@ var PREFILL_PHONE = __INIT.param('phone');
 // its blank option.
 var AGENT_LIST = __INIT.agentList;
 var TIMEFRAME_LIST = __INIT.timeframeList;
-// Requires a real-looking TLD (2+ letters) — matches the tightened check in
+// Requires a real-looking TLD (2+ letters) -- matches the tightened check in
 // Code.gs, so a bad email is caught here first with a clear inline message
 // instead of round-tripping to FUB and coming back as a generic error.
 var EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
 
-// Show the QA test banner (and push the page down so it isn't covered by the
-// fixed banner) whenever this page load is a test session, so Durand can never
-// mistake a test form for the real one at a glance.
+// Show the QA test banner (the shared one in Chrome.html; push the page down
+// so it isn't covered by the fixed banner) whenever this page load is a test
+// session, so Durand can never mistake a test form for the real one at a
+// glance.
 if (QA_TEST_TOKEN) {
   var qaBannerEl = document.getElementById('qaTestBanner');
   qaBannerEl.style.display = 'block';
-  document.body.style.paddingTop = qaBannerEl.offsetHeight + 'px';
+  document.body.style.paddingTop = (qaBannerEl.offsetHeight || 40) + 'px';
+}
+// 2026-10-01: an empty roster means the FUB fetch failed on the server; say
+// so on the page (Chrome.html's notice) instead of leaving a silently empty
+// Hosting Agent dropdown.
+if (!AGENT_LIST.length) {
+  var pageLoadErrorEl = document.getElementById('pageLoadError');
+  if (pageLoadErrorEl) pageLoadErrorEl.style.display = 'block';
 }
 
+// 2026-10-05: agents and timeframes are inserted above each dropdown's
+// "Not sure / N/A" option, which stays last.
+var hostingSel = document.getElementById('hostingAgent');
 AGENT_LIST.forEach(a => {
   const opt = document.createElement('option');
   opt.value = a.name;
   opt.textContent = a.name;
-  document.getElementById('hostingAgent').appendChild(opt);
+  hostingSel.insertBefore(opt, document.getElementById('hostingAgentNa'));
 });
+// 2026-10-02 (red-team): keep the ?agent=... prefill by adding it as an
+// option when the roster could not be loaded.
+// 2026-10-05, per Durand (live QA): ONLY when the roster is empty (FUB
+// unreachable). A roster that loaded but lacks the agent means they are not
+// pickable on the forms, and re-adding them from the link is exactly how an
+// old ?agent=Chelsey link kept preselecting Chelsey Stiles. The first-name
+// check mirrors FORM_EXCLUDED_AGENT_FIRST_NAMES in Code.gs for the FUB-down
+// case; the server ignores an excluded agent either way.
+var FORM_EXCLUDED_AGENT_FIRST_NAMES = ['chelsey', 'chelsea'];
+var prefillAgentFirst = String(PREFILL_AGENT || '').trim().toLowerCase().split(/\s+/)[0];
+var prefillAgentExcluded = FORM_EXCLUDED_AGENT_FIRST_NAMES.indexOf(prefillAgentFirst) !== -1;
+if (PREFILL_AGENT && !AGENT_LIST.length && !prefillAgentExcluded) {
+  const hasPrefill = Array.from(hostingSel.options).some(o => o.value === PREFILL_AGENT);
+  if (!hasPrefill) {
+    const opt = document.createElement('option');
+    opt.value = PREFILL_AGENT;
+    opt.textContent = PREFILL_AGENT;
+    hostingSel.insertBefore(opt, document.getElementById('hostingAgentNa'));
+  }
+}
 TIMEFRAME_LIST.forEach(t => {
   const opt = document.createElement('option');
   opt.value = t.name;
   opt.textContent = t.name;
-  document.getElementById('timeframe').appendChild(opt);
+  document.getElementById('timeframe').insertBefore(opt, document.getElementById('timeframeNa'));
 });
 
 // Must run AFTER the options above are appended -- setting .value on a
 // <select> that doesn't yet contain a matching <option> silently does
 // nothing, so a ?agent=... prefill would have been dropped if this stayed
-// where it was.
-document.getElementById('hostingAgent').value = PREFILL_AGENT;
-document.getElementById('propertyAddress').value = PREFILL_ADDRESS;
+// where it was. 2026-10-05: only selected when it is actually an option, so
+// an excluded or off-roster ?agent= leaves "Select…" showing.
+if (PREFILL_AGENT && Array.from(hostingSel.options).some(o => o.value === PREFILL_AGENT)) {
+  hostingSel.value = PREFILL_AGENT;
+}
+
+// 2026-10-05: the property address is four boxes now. An ?address= link
+// ("123 Main St, Philadelphia, PA 19103") is split into them; anything that
+// doesn't split cleanly goes into the street box for the visitor to finish.
+var streetEl = document.getElementById('propertyStreet');
+var cityEl = document.getElementById('propertyCity');
+var stateEl = document.getElementById('propertyState');
+var zipEl = document.getElementById('propertyZip');
+function fillAddressFromLine(line) {
+  line = collapseSpaces(line);
+  if (!line) return;
+  var mm = line.match(/^(.+?),\s*([^,]+?),\s*([A-Za-z]{2})\.?(?:\s+(\d{5}(?:-\d{4})?))?(?:\s*,?\s*(?:USA?|United States))?$/i);
+  if (mm) {
+    streetEl.value = mm[1];
+    cityEl.value = mm[2];
+    stateEl.value = mm[3].toUpperCase();
+    zipEl.value = mm[4] || '';
+  } else {
+    streetEl.value = line;
+  }
+}
+fillAddressFromLine(PREFILL_ADDRESS);
 
 var nameEl = document.getElementById('visitorName');
 var emailEl = document.getElementById('email');
 var phoneEl = document.getElementById('phone');
+var referredByEl = document.getElementById('referredBy');
 
 // Prefill the visitor's own info when a hosting agent already knows it
 // (see OpenHouseSetup.html). The visitor can still edit any of these.
@@ -268,6 +500,12 @@ if (PREFILL_EMAIL) emailEl.value = PREFILL_EMAIL.trim().toLowerCase();
 if (PREFILL_PHONE) phoneEl.value = formatPhoneDisplay(digitsOnly(PREFILL_PHONE));
 var consentEl = document.getElementById('consent');
 var submitBtn = document.getElementById('submitBtn');
+var submitErrEl = document.getElementById('submitErr');
+
+function showSubmitErr(msg) {
+  submitErrEl.textContent = msg;
+  submitErrEl.style.display = msg ? 'block' : 'none';
+}
 
 function digitsOnly(s) { return (s || '').replace(/\D/g, ''); }
 function collapseSpaces(s) { return (s || '').replace(/\s+/g, ' ').trim(); }
@@ -291,9 +529,10 @@ phoneEl.addEventListener('input', function () {
   validateForm();
 });
 
-[nameEl, document.getElementById('propertyAddress')].forEach(function (el) {
-  el.addEventListener('blur', function () { this.value = collapseSpaces(this.value); });
+[nameEl, streetEl, cityEl, zipEl, referredByEl].forEach(function (el) {
+  el.addEventListener('blur', function () { this.value = collapseSpaces(this.value); validateForm(); });
 });
+stateEl.addEventListener('blur', function () { this.value = collapseSpaces(this.value).toUpperCase(); validateForm(); });
 
 emailEl.addEventListener('blur', function () { this.value = this.value.trim().toLowerCase(); validateForm(); });
 document.getElementById('notes').addEventListener('blur', function () { this.value = this.value.trim(); });
@@ -305,13 +544,37 @@ function validateForm() {
   var phoneDigits = digitsOnly(phoneEl.value);
   var phoneOk = phoneDigits.length >= 10 && phoneDigits.length <= 15;
   var consentOk = consentEl.checked;
+  // 2026-10-05, per Durand (live QA): every other question is required too
+  // (N/A accepted), and the address must be complete. The same rules are
+  // re-checked on the server (requireAnswers_ / requireFullAddress_).
+  var addrOk = streetEl.value.trim() && cityEl.value.trim() &&
+    /^[A-Za-z]{2}$/.test(stateEl.value.trim()) && /^\d{5}(-\d{4})?$/.test(zipEl.value.trim());
+  var missing = [];
+  if (!hostingSel.value) missing.push('Hosting Agent');
+  if (!addrOk) missing.push('Property Address (street, city, state, ZIP)');
+  if (!nameOk) missing.push('Full Name');
+  if (!emailOk) missing.push('Email');
+  if (!phoneOk) missing.push('Phone');
+  if (!document.getElementById('timeframe').value) missing.push('Timeframe to Buy');
+  if (!document.getElementById('howHeard').value) missing.push('How did you hear');
+  if (!referredByEl.value.trim()) missing.push('Who referred you (or N/A)');
+  if (!document.getElementById('notes').value.trim()) missing.push('Notes (or N/A)');
+  if (!consentOk) missing.push('the consent box');
 
   document.getElementById('nameErr').textContent = (!nameOk && nameEl.value.length > 0) ? 'Name is required.' : '';
   document.getElementById('emailErr').textContent = (!emailOk && emailEl.value.length > 0) ? 'Enter a valid email address (e.g. name@example.com).' : '';
   document.getElementById('phoneErr').textContent = (!phoneOk && phoneEl.value.length > 0) ? 'Enter a valid 10-digit phone number.' : '';
+  document.getElementById('addrErr').textContent = (!addrOk && (stateEl.value || zipEl.value)) ? 'Enter the street, city, 2-letter state and 5-digit ZIP.' : '';
+  document.getElementById('missingHint').textContent = missing.length ? 'Still needed: ' + missing.join(', ') + '.' : '';
 
-  submitBtn.disabled = !(nameOk && emailOk && phoneOk && consentOk);
+  submitBtn.disabled = missing.length > 0;
 }
+
+[hostingSel, document.getElementById('timeframe'), document.getElementById('howHeard'), streetEl, cityEl, stateEl, zipEl,
+  referredByEl, document.getElementById('notes')].forEach(function (el) {
+  el.addEventListener('input', validateForm);
+  el.addEventListener('change', validateForm);
+});
 
 [nameEl, emailEl, phoneEl, consentEl].forEach(function (el) {
   el.addEventListener('input', validateForm);
@@ -323,7 +586,9 @@ submitBtn.addEventListener('click', function () {
   // field was edited after its own blur/change fired.
   nameEl.value = collapseSpaces(nameEl.value);
   emailEl.value = emailEl.value.trim().toLowerCase();
-  document.getElementById('propertyAddress').value = collapseSpaces(document.getElementById('propertyAddress').value);
+  [streetEl, cityEl, zipEl].forEach(function (el) { el.value = collapseSpaces(el.value); });
+  stateEl.value = collapseSpaces(stateEl.value).toUpperCase();
+  referredByEl.value = collapseSpaces(referredByEl.value);
   document.getElementById('notes').value = document.getElementById('notes').value.trim();
 
   validateForm();
@@ -331,7 +596,7 @@ submitBtn.addEventListener('click', function () {
 
   submitBtn.disabled = true;
   submitBtn.textContent = 'Signing In...';
-  document.getElementById('submitErr').textContent = '';
+  showSubmitErr('');
 
   var data = {
     website: document.getElementById('website').value,
@@ -339,10 +604,16 @@ submitBtn.addEventListener('click', function () {
     visitorName: nameEl.value,
     email: emailEl.value,
     phone: digitsOnly(phoneEl.value),
-    hostingAgent: document.getElementById('hostingAgent').value,
-    propertyAddress: document.getElementById('propertyAddress').value,
+    hostingAgent: hostingSel.value,
+    // 2026-10-05: the four parts, plus the one line older code reads.
+    propertyStreet: streetEl.value,
+    propertyCity: cityEl.value,
+    propertyState: stateEl.value,
+    propertyZip: zipEl.value,
+    propertyAddress: streetEl.value + ', ' + cityEl.value + ', ' + stateEl.value + ' ' + zipEl.value,
     timeframe: document.getElementById('timeframe').value,
     howHeard: document.getElementById('howHeard').value,
+    referredBy: referredByEl.value,
     followUpConsent: consentEl.checked ? 'Yes' : 'No',
     notes: document.getElementById('notes').value
   };
@@ -357,19 +628,34 @@ submitBtn.addEventListener('click', function () {
     .then(function (result) {
       if (result.ok) {
         document.getElementById('formWrap').classList.add('hidden');
-        document.getElementById('successBox').style.display = 'block';
+        showSuccessBox();
       } else {
-        document.getElementById('submitErr').textContent = result.error || 'Something went wrong. Try again.';
+        showSubmitErr(result.error || 'Something went wrong. Try again.');
         submitBtn.disabled = false;
         submitBtn.textContent = 'Sign In';
       }
     })
     .catch(function () {
-      document.getElementById('submitErr').textContent = 'Network error. Check your connection and try again.';
+      showSubmitErr('Network error. Check your connection and try again.');
       submitBtn.disabled = false;
       submitBtn.textContent = 'Sign In';
     });
 });
+
+// 2026-10-05, per Durand (live QA): the confirmation "was not visible at
+// first". The visitor submits from the bottom of a long form; hiding the form
+// left the page scrolled past the short success box (inside Apps Script's
+// iframe, and on a phone, the viewport stayed where the button had been). Now
+// the page scrolls to the top, the box is scrolled into view below the QA
+// banner if one is showing, and it takes focus so screen readers announce
+// it. Same code on the Apps Script page and the hosted page.
+function showSuccessBox() {
+  var box = document.getElementById('successBox');
+  box.style.display = 'block';
+  try { window.scrollTo(0, 0); } catch (e) { /* non-fatal */ }
+  try { box.scrollIntoView({ block: 'center' }); } catch (e) { box.scrollIntoView(); }
+  try { box.focus({ preventScroll: true }); } catch (e) { box.focus(); }
+}
 
 document.getElementById('resetBtn').addEventListener('click', function () {
   nameEl.value = '';
@@ -377,11 +663,14 @@ document.getElementById('resetBtn').addEventListener('click', function () {
   phoneEl.value = '';
   document.getElementById('timeframe').value = '';
   document.getElementById('howHeard').value = '';
+  referredByEl.value = '';
   document.getElementById('notes').value = '';
   consentEl.checked = false;
   submitBtn.disabled = true;
   submitBtn.textContent = 'Sign In';
-  document.getElementById('submitErr').textContent = '';
+  showSubmitErr('');
+  validateForm(); // 2026-10-05: refresh the "Still needed" line
+  try { window.scrollTo(0, 0); } catch (e) { /* non-fatal */ }
   document.getElementById('successBox').style.display = 'none';
   document.getElementById('formWrap').classList.remove('hidden');
 });
