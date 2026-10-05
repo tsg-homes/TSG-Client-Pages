@@ -288,6 +288,24 @@
       <input type="text" id="referredBy" name="referredBy" required>
       <div class="hint">If no one referred you, enter N/A.</div>
     </div>
+    <!-- 2026-10-05, per Durand (live QA item 29): the referrer's cell and
+         email, so the right person is credited. Required (N/A accepted) and
+         hidden + disabled while "Who referred you" is N/A. Used only to
+         confirm the referrer server-side; this page never shows anything
+         about whether or how they were found. The email box is type=text
+         because type=email refuses a typed "N/A"; the script checks it. -->
+    <div id="referrer-contact">
+      <div class="field">
+        <label class="qlabel" for="referredByPhone">Referrer's cell phone<span class="req">*</span></label>
+        <input type="tel" id="referredByPhone" name="referredByPhone" autocomplete="off" required>
+        <div class="hint">Enter N/A if you don't have it.</div>
+      </div>
+      <div class="field">
+        <label class="qlabel" for="referredByEmail">Referrer's email<span class="req">*</span></label>
+        <input type="text" id="referredByEmail" name="referredByEmail" inputmode="email" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+        <div class="hint">Enter N/A if you don't have it.</div>
+      </div>
+    </div>
 
     <!-- ===================== BUYER SECTION ===================== -->
     <div id="buyer-section">
@@ -1225,6 +1243,43 @@ agencyLink.addEventListener('click', e => {
   agencyHint.textContent = 'Thanks. You can check the box now.';
 });
 
+// ---------- Referrer's cell and email (2026-10-05, per Durand, live QA item 29) ----------
+// Shown and required unless "Who referred you to us?" is N/A; hidden means
+// disabled too, so nothing stale is submitted. Each accepts N/A. The phone is
+// checked the way the server's validatePhoneField checks the other numbers
+// (10-15 digits); the email with the same pattern as validateEmailField.
+const NA_ANSWER = /^\s*(n\s*\/\s*a|na|not applicable)\s*\.?\s*$/i;
+const REFERRER_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+const referredByEl = document.getElementById('referredBy');
+const referrerContactEl = document.getElementById('referrer-contact');
+const referredByPhoneEl = document.getElementById('referredByPhone');
+const referredByEmailEl = document.getElementById('referredByEmail');
+function syncReferrerContact() {
+  const show = !NA_ANSWER.test(referredByEl.value);
+  referrerContactEl.style.display = show ? 'block' : 'none';
+  [referredByPhoneEl, referredByEmailEl].forEach(el => {
+    el.required = show;
+    el.disabled = !show;
+  });
+}
+function checkReferrerContact() {
+  const phone = referredByPhoneEl.value.trim();
+  const digits = phone.replace(/\D/g, '');
+  referredByPhoneEl.setCustomValidity(!phone || NA_ANSWER.test(phone) || (digits.length >= 10 && digits.length <= 15)
+    ? '' : 'Enter a 10-digit phone number, or N/A.');
+  const email = referredByEmailEl.value.trim();
+  referredByEmailEl.setCustomValidity(!email || NA_ANSWER.test(email) || REFERRER_EMAIL_PATTERN.test(email)
+    ? '' : 'Enter an email like name@example.com, or N/A.');
+}
+referredByEl.addEventListener('input', syncReferrerContact);
+referredByEl.addEventListener('change', syncReferrerContact);
+[referredByPhoneEl, referredByEmailEl].forEach(el => {
+  el.addEventListener('input', () => el.setCustomValidity(''));
+  el.addEventListener('blur', () => { el.value = el.value.trim(); checkReferrerContact(); });
+});
+window.addEventListener('pageshow', syncReferrerContact);
+syncReferrerContact();
+
 // Initial pass, once everything above is wired: puts every conditional panel
 // into its correct closed state (required=false, disabled=true) before the
 // visitor has picked a role, so the very first submit attempt is never
@@ -1265,6 +1320,8 @@ form.addEventListener('submit', async (e) => {
     return;
   }
   form.querySelectorAll('input.flex-date').forEach(applyFlexDate);
+  syncReferrerContact();
+  checkReferrerContact();
   if (!form.reportValidity()) return;
 
   const data = Object.fromEntries(new FormData(form).entries());

@@ -317,6 +317,25 @@
         <input type="text" name="referredBy" id="referredBy" maxlength="200">
         <div class="hint">If someone sent you our way, name them so we can thank them. Otherwise enter N/A.</div>
       </div>
+      <!-- 2026-10-05, per Durand (live QA item 29): the referrer's cell and
+           email, so the right person is credited. Required (N/A accepted);
+           hidden while "Who referred you" is N/A. Used only to confirm the
+           referrer server-side -- this page never shows whether or how they
+           were found. The email box is type=text so a typed N/A is allowed. -->
+      <div id="referrerContact">
+        <div class="field">
+          <label class="qlabel" for="referredByPhone">Referrer's Cell Phone <span class="req">*</span></label>
+          <input type="tel" id="referredByPhone" placeholder="(555) 555-5555" inputmode="tel" autocomplete="off">
+          <div class="hint">Enter N/A if you don't have it.</div>
+          <div class="hint hint--err" id="referredByPhoneErr"></div>
+        </div>
+        <div class="field">
+          <label class="qlabel" for="referredByEmail">Referrer's Email <span class="req">*</span></label>
+          <input type="text" id="referredByEmail" inputmode="email" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <div class="hint">Enter N/A if you don't have it.</div>
+          <div class="hint hint--err" id="referredByEmailErr"></div>
+        </div>
+      </div>
       <div class="field">
         <label class="qlabel" for="notes">Notes <span class="req">*</span></label>
         <textarea id="notes"></textarea>
@@ -492,6 +511,11 @@ var nameEl = document.getElementById('visitorName');
 var emailEl = document.getElementById('email');
 var phoneEl = document.getElementById('phone');
 var referredByEl = document.getElementById('referredBy');
+// 2026-10-05, per Durand (live QA item 29): the referrer's cell and email.
+var referrerContactEl = document.getElementById('referrerContact');
+var referredByPhoneEl = document.getElementById('referredByPhone');
+var referredByEmailEl = document.getElementById('referredByEmail');
+var NA_ANSWER = /^\s*(n\s*\/\s*a|na|not applicable)\s*\.?\s*$/i;
 
 // Prefill the visitor's own info when a hosting agent already knows it
 // (see OpenHouseSetup.html). The visitor can still edit any of these.
@@ -529,6 +553,28 @@ phoneEl.addEventListener('input', function () {
   validateForm();
 });
 
+// 2026-10-05: the referrer's cell gets the same live formatting, except while
+// the visitor is typing N/A (anything with a letter is left as typed).
+referredByPhoneEl.addEventListener('input', function () {
+  if (/[a-z]/i.test(referredByPhoneEl.value)) { validateForm(); return; }
+  var digits = digitsOnly(referredByPhoneEl.value).slice(0, 15);
+  referredByPhoneEl.value = digits.length <= 10 ? formatPhoneDisplay(digits) : digits;
+  validateForm();
+});
+referredByEmailEl.addEventListener('blur', function () {
+  this.value = NA_ANSWER.test(this.value) ? 'N/A' : this.value.trim().toLowerCase();
+  validateForm();
+});
+referredByPhoneEl.addEventListener('blur', function () {
+  if (NA_ANSWER.test(this.value)) this.value = 'N/A';
+  validateForm();
+});
+
+// Shown unless "Who referred you to us?" is N/A.
+function referrerContactNeeded() {
+  return !NA_ANSWER.test(referredByEl.value);
+}
+
 [nameEl, streetEl, cityEl, zipEl, referredByEl].forEach(function (el) {
   el.addEventListener('blur', function () { this.value = collapseSpaces(this.value); validateForm(); });
 });
@@ -558,6 +604,18 @@ function validateForm() {
   if (!document.getElementById('timeframe').value) missing.push('Timeframe to Buy');
   if (!document.getElementById('howHeard').value) missing.push('How did you hear');
   if (!referredByEl.value.trim()) missing.push('Who referred you (or N/A)');
+  // 2026-10-05, per Durand: the referrer's cell and email, N/A accepted.
+  var needReferrer = referrerContactNeeded();
+  referrerContactEl.style.display = needReferrer ? 'block' : 'none';
+  var refPhoneVal = referredByPhoneEl.value.trim();
+  var refPhoneDigits = digitsOnly(refPhoneVal);
+  var refPhoneOk = NA_ANSWER.test(refPhoneVal) || (refPhoneDigits.length >= 10 && refPhoneDigits.length <= 15);
+  var refEmailVal = referredByEmailEl.value.trim();
+  var refEmailOk = NA_ANSWER.test(refEmailVal) || EMAIL_PATTERN.test(refEmailVal);
+  if (needReferrer && !refPhoneOk) missing.push("Referrer's cell phone (or N/A)");
+  if (needReferrer && !refEmailOk) missing.push("Referrer's email (or N/A)");
+  document.getElementById('referredByPhoneErr').textContent = (needReferrer && !refPhoneOk && refPhoneVal.length > 0) ? 'Enter a 10-digit phone number, or N/A.' : '';
+  document.getElementById('referredByEmailErr').textContent = (needReferrer && !refEmailOk && refEmailVal.length > 0) ? 'Enter a valid email address, or N/A.' : '';
   if (!document.getElementById('notes').value.trim()) missing.push('Notes (or N/A)');
   if (!consentOk) missing.push('the consent box');
 
@@ -571,7 +629,7 @@ function validateForm() {
 }
 
 [hostingSel, document.getElementById('timeframe'), document.getElementById('howHeard'), streetEl, cityEl, stateEl, zipEl,
-  referredByEl, document.getElementById('notes')].forEach(function (el) {
+  referredByEl, referredByPhoneEl, referredByEmailEl, document.getElementById('notes')].forEach(function (el) {
   el.addEventListener('input', validateForm);
   el.addEventListener('change', validateForm);
 });
@@ -589,6 +647,7 @@ submitBtn.addEventListener('click', function () {
   [streetEl, cityEl, zipEl].forEach(function (el) { el.value = collapseSpaces(el.value); });
   stateEl.value = collapseSpaces(stateEl.value).toUpperCase();
   referredByEl.value = collapseSpaces(referredByEl.value);
+  referredByEmailEl.value = referredByEmailEl.value.trim().toLowerCase();
   document.getElementById('notes').value = document.getElementById('notes').value.trim();
 
   validateForm();
@@ -614,6 +673,12 @@ submitBtn.addEventListener('click', function () {
     timeframe: document.getElementById('timeframe').value,
     howHeard: document.getElementById('howHeard').value,
     referredBy: referredByEl.value,
+    // 2026-10-05, per Durand: '' when the referrer is N/A (the boxes are
+    // hidden); 'N/A' as answered; else digits / the lower-cased email.
+    referredByPhone: !referrerContactNeeded() ? '' :
+      (NA_ANSWER.test(referredByPhoneEl.value) ? 'N/A' : digitsOnly(referredByPhoneEl.value)),
+    referredByEmail: !referrerContactNeeded() ? '' :
+      (NA_ANSWER.test(referredByEmailEl.value) ? 'N/A' : referredByEmailEl.value.trim().toLowerCase()),
     followUpConsent: consentEl.checked ? 'Yes' : 'No',
     notes: document.getElementById('notes').value
   };
@@ -664,6 +729,8 @@ document.getElementById('resetBtn').addEventListener('click', function () {
   document.getElementById('timeframe').value = '';
   document.getElementById('howHeard').value = '';
   referredByEl.value = '';
+  referredByPhoneEl.value = '';
+  referredByEmailEl.value = '';
   document.getElementById('notes').value = '';
   consentEl.checked = false;
   submitBtn.disabled = true;
