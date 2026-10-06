@@ -119,7 +119,7 @@
   .hint--warn { color: var(--warn-ink); }
   input[type=text], input[type=email], input[type=tel], input[type=date], input[type=number], input[type=url], select, textarea {
     width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--input); color: var(--ink);
-    font-family: var(--font-sans); font-size: 15px; line-height: 1.4; }
+    font-family: var(--font-sans); font-size: 16px; line-height: 1.4; } /* 2026-10-06 (redteam UX): 16px stops iOS zooming on focus */
   input:focus, select:focus, textarea:focus { outline: 2px solid var(--heading); outline-offset: 1px; }
   input[readonly] { background: var(--surface); color: var(--ink-2); }
   input[type=file] { width: 100%; padding: 8px 0; font-family: var(--font-sans); font-size: 14px; color: var(--ink-2); }
@@ -176,6 +176,22 @@
     font-family: var(--font-sans); font-size: 14px; font-weight: 700; letter-spacing: .03em; text-align: center; padding: 10px 14px; }
   #pageLoadError { display: none; width: 90%; max-width: 760px; margin: var(--space-5) auto 0; padding: 14px 18px; background: var(--critical-bg);
     border: 1px solid var(--critical); border-radius: var(--radius-md); color: var(--critical); font-family: var(--font-sans); font-size: 14px; line-height: 1.45; }
+
+  /* ---------- 2026-10-06 (redteam UX, steps 32-36) ---------- */
+  /* Tap targets: every option row and button is at least 44px tall and the box itself is 22px. */
+  .opt, .opt-other { min-height: 44px; }
+  .opt input[type=radio], .opt input[type=checkbox], .opt-other input[type=radio], .opt-other input[type=checkbox] { width: 22px; height: 22px; flex: 0 0 22px; accent-color: var(--heading); }
+  label.opt { cursor: pointer; }
+  .tsg-btn { min-height: 44px; }
+  .tsg-btn--sm { min-height: 36px; }
+  /* Field-level errors sit under the field they belong to. */
+  .field-error { display: none; margin-top: 6px; font-size: 13px; line-height: 1.4; color: var(--critical); }
+  .field-error.is-on { display: block; }
+  .field.has-error > input, .field.has-error > select, .field.has-error > textarea { border-color: var(--critical); }
+  /* Loading state for the hosted pages (the loader adds .tsg-init until page.init answers). */
+  .tsg-init .tsg-form { opacity: .55; pointer-events: none; }
+  #initStatus { display: none; width: 90%; max-width: 760px; margin: var(--space-4) auto 0; font-size: 14px; color: var(--ink-2); }
+  .tsg-init #initStatus { display: block; }
 </style>
 
 <style>
@@ -222,6 +238,7 @@
      when the project could not reach FUB (bad key, outage). No detail is
      shown here on a public page; the error alert email carries the cause. -->
 <div id="qaTestBanner">QA TEST MODE &mdash; writes are real but tagged, notifications go only to Durand</div>
+<div id="initStatus" role="status" aria-live="polite">Loading the form&hellip;</div>
 <div id="pageLoadError" role="alert">
   <strong>This page is not working right now.</strong> The agent list could not be loaded. You can still sign in, but tell the agent you did, so they can check it reached them. The team has been alerted.
 </div>
@@ -313,15 +330,15 @@
     <div class="tsg-section"><h2 class="tsg-section__label">Buyer Information</h2></div>
     <div class="field">
       <label class="qlabel" for="buyer1Name">Buyer 1 Name (as it appears on your ID)<span class="req">*</span></label>
-      <input type="text" id="buyer1Name" name="buyer1Name">
+      <input type="text" id="buyer1Name" name="buyer1Name" autocomplete="name">
     </div>
     <div class="field">
       <label class="qlabel" for="buyer1Mobile">Buyer 1 Mobile<span class="req">*</span></label>
-      <input type="tel" id="buyer1Mobile" name="buyer1Mobile">
+      <input type="tel" id="buyer1Mobile" name="buyer1Mobile" autocomplete="tel">
     </div>
     <div class="field">
       <label class="qlabel" for="buyer1Email">Buyer 1 Email<span class="req">*</span></label>
-      <input type="email" id="buyer1Email" name="buyer1Email">
+      <input type="email" id="buyer1Email" name="buyer1Email" autocomplete="email">
     </div>
     <!-- 2026-10-05, per Durand (live QA): the date boxes are plain text now.
          <input type=date> refused pasted dates and, on iPhone, showed today's
@@ -640,15 +657,15 @@
     <div class="tsg-section"><h2 class="tsg-section__label">Seller Information</h2></div>
     <div class="field">
       <label class="qlabel" for="seller1Name">Seller 1 Name (as it appears on your ID)<span class="req">*</span></label>
-      <input type="text" id="seller1Name" name="seller1Name">
+      <input type="text" id="seller1Name" name="seller1Name" autocomplete="name">
     </div>
     <div class="field">
       <label class="qlabel" for="seller1Mobile">Seller 1 Mobile<span class="req">*</span></label>
-      <input type="tel" id="seller1Mobile" name="seller1Mobile">
+      <input type="tel" id="seller1Mobile" name="seller1Mobile" autocomplete="tel">
     </div>
     <div class="field">
       <label class="qlabel" for="seller1Email">Seller 1 Email<span class="req">*</span></label>
-      <input type="email" id="seller1Email" name="seller1Email">
+      <input type="email" id="seller1Email" name="seller1Email" autocomplete="email">
     </div>
     <div class="field">
       <label class="qlabel" for="seller1Birthday">Seller 1 Birthday<span class="req">*</span></label>
@@ -836,6 +853,7 @@
 <script>
 (function () {
   var q = new URLSearchParams(window.location.search);
+  document.documentElement.classList.add('tsg-init'); // 2026-10-06 (redteam UX): visible loading state until page.init answers
   window.PAGE_VERSION = "2026-10-06";
   var body = { action: 'page.init', form: "buyer-seller", qatest: q.get('qatest') || '', website: '', pageVersion: window.PAGE_VERSION };
   // 2026-10-06 (redteam #8): the shared notice says "you can still sign in",
@@ -844,6 +862,7 @@
   // be saved. Say so, offer a retry, keep the submit buttons off, and tell the
   // server (best effort) so Durand hears about a dead page.
   function fail(err) {
+    document.documentElement.classList.remove('tsg-init');
     var el = document.getElementById('pageLoadError');
     if (el) {
       el.innerHTML = '<strong>This page could not load, so nothing can be saved right now.</strong> ' +
@@ -891,6 +910,7 @@
       res.agentList = Array.isArray(res.agentList) ? res.agentList : [];
       res.timeframeList = Array.isArray(res.timeframeList) ? res.timeframeList : [];
       res.param = function (name) { return q.get(name) || ''; };
+      document.documentElement.classList.remove('tsg-init');
       __run(res);
     })
     .catch(fail);
