@@ -836,7 +836,8 @@
 <script>
 (function () {
   var q = new URLSearchParams(window.location.search);
-  var body = { action: 'page.init', form: "buyer-seller", qatest: q.get('qatest') || '', website: '' };
+  window.PAGE_VERSION = "2026-10-06";
+  var body = { action: 'page.init', form: "buyer-seller", qatest: q.get('qatest') || '', website: '', pageVersion: window.PAGE_VERSION };
   // 2026-10-06 (redteam #8): the shared notice says "you can still sign in",
   // which is true for a page served by Apps Script (only the agent list was
   // lost) and false here: without page.init there is no token, so nothing can
@@ -880,6 +881,13 @@
   }
   init()
     .then(function (res) {
+      if (res.pageVersion && res.pageVersion !== window.PAGE_VERSION) {
+        var key = 'tsgPageReloaded-' + res.pageVersion;
+        var done = false;
+        try { done = !!sessionStorage.getItem(key); sessionStorage.setItem(key, '1'); } catch (storeErr) { done = false; }
+        if (!done) { window.location.replace(window.location.pathname + '?v=' + encodeURIComponent(res.pageVersion) + (window.location.search ? '&' + window.location.search.slice(1) : '')); return; }
+        throw new Error('page version ' + window.PAGE_VERSION + ' but server expects ' + res.pageVersion);
+      }
       res.agentList = Array.isArray(res.agentList) ? res.agentList : [];
       res.timeframeList = Array.isArray(res.timeframeList) ? res.timeframeList : [];
       res.param = function (name) { return q.get(name) || ''; };
@@ -1388,6 +1396,7 @@ form.addEventListener('submit', async (e) => {
 
   try {
     data.formToken = SUBMIT_TOKEN;
+    data.pageVersion = (typeof PAGE_VERSION !== 'undefined' ? PAGE_VERSION : ''); // 2026-10-06 (redteam #21): hosted pages only
     // Only sent when this page load was actually issued a test token. The key
     // is omitted entirely otherwise, so a normal submission's payload is
     // exactly what it has always been.
