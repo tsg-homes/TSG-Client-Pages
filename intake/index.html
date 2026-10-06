@@ -137,7 +137,7 @@
   /* The "Unknown / N/A" tick box under a date, and the street / city / state /
      ZIP address block (2026-10-05). */
   .na-check { display: inline-flex; align-items: center; gap: 6px; margin-top: var(--space-2); font-size: 14px; font-weight: 400; color: var(--ink-2); cursor: pointer; }
-  .na-check input { width: auto; margin: 0; }
+  .na-check input { width: 22px; height: 22px; margin: 0; flex: 0 0 22px; accent-color: var(--heading); }
   .tsg-addr { display: grid; grid-template-columns: 1fr 5.5em 7.5em; gap: var(--space-2); }
   .tsg-addr__street { grid-column: 1 / -1; }
   @media (max-width: 600px) { .tsg-addr { grid-template-columns: 1fr 1fr; } .tsg-addr__city { grid-column: 1 / -1; } }
@@ -218,7 +218,7 @@
   #renting-subfields, #preapproved-subfields { display: none; }
   #buyer-section, #seller-section { display: none; }
   .consent-row { display: flex; align-items: flex-start; gap: var(--space-2); }
-  .consent-row input { width: auto; margin: 3px 0 0; flex: 0 0 auto; }
+  .consent-row input { width: 22px; height: 22px; margin: 0; flex: 0 0 22px; accent-color: var(--heading); }
   .consent-row label { font-weight: 400; font-size: 13px; line-height: 1.5; color: var(--ink-2); }
   .notice-text { margin: 0 0 var(--space-3); font-size: 14px; line-height: 1.55; color: var(--ink-2); }
   #status-msg { margin-top: var(--space-3); margin-bottom: 0; text-align: center; }
@@ -854,7 +854,7 @@
 (function () {
   var q = new URLSearchParams(window.location.search);
   document.documentElement.classList.add('tsg-init'); // 2026-10-06 (redteam UX): visible loading state until page.init answers
-  window.PAGE_VERSION = "2026-10-06";
+  window.PAGE_VERSION = "2026-10-06.2";
   var body = { action: 'page.init', form: "buyer-seller", qatest: q.get('qatest') || '', website: '', pageVersion: window.PAGE_VERSION };
   // 2026-10-06 (redteam #8): the shared notice says "you can still sign in",
   // which is true for a page served by Apps Script (only the agent list was
@@ -870,7 +870,13 @@
         'If it keeps failing, tell the agent and they will take your details by hand. The team has been alerted.';
       el.style.display = 'block';
       var retry = document.getElementById('pageLoadRetry');
-      if (retry) retry.addEventListener('click', function () { window.location.reload(); });
+      if (retry) retry.addEventListener('click', function () {
+        // 2026-10-06 (re-test A R4b): a stale page that is still being served
+        // (CDN cache) set the reload-once flag; Retry clears it so the next
+        // load may try the reload again.
+        try { Object.keys(sessionStorage).forEach(function (k) { if (k.indexOf('tsgPageReloaded-') === 0) sessionStorage.removeItem(k); }); } catch (storeErr) { /* ignore */ }
+        window.location.reload();
+      });
     }
     var buttons = document.querySelectorAll('button[type="submit"], input[type="submit"]');
     for (var i = 0; i < buttons.length; i++) buttons[i].disabled = true;
@@ -902,10 +908,16 @@
     .then(function (res) {
       if (res.pageVersion && res.pageVersion !== window.PAGE_VERSION) {
         var key = 'tsgPageReloaded-' + res.pageVersion;
-        var done = false;
-        try { done = !!sessionStorage.getItem(key); sessionStorage.setItem(key, '1'); } catch (storeErr) { done = false; }
+        // 2026-10-06 (re-test A R4a): "already reloaded" is also read off the
+        // URL (?v=<server version>), so blocked storage cannot loop the reload.
+        var done = q.get('v') === res.pageVersion;
+        try { done = done || !!sessionStorage.getItem(key); sessionStorage.setItem(key, '1'); } catch (storeErr) { /* storage blocked: the URL check stands */ }
         if (!done) { window.location.replace(window.location.pathname + '?v=' + encodeURIComponent(res.pageVersion) + (window.location.search ? '&' + window.location.search.slice(1) : '')); return; }
-        throw new Error('page version ' + window.PAGE_VERSION + ' but server expects ' + res.pageVersion);
+        // Still the old page after one reload (Pages not published yet): carry
+        // on when the server still accepts this version, else show the notice.
+        var accepted = Array.isArray(res.pageVersionsAccepted) ? res.pageVersionsAccepted : [res.pageVersion];
+        if (accepted.indexOf(window.PAGE_VERSION) === -1) throw new Error('page version ' + window.PAGE_VERSION + ' but server expects ' + res.pageVersion);
+        if (window.console) console.warn('Hosted page ' + window.PAGE_VERSION + ' is behind the server (' + res.pageVersion + ') but still accepted.');
       }
       res.agentList = Array.isArray(res.agentList) ? res.agentList : [];
       res.timeframeList = Array.isArray(res.timeframeList) ? res.timeframeList : [];
