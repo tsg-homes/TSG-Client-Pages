@@ -366,9 +366,27 @@
 (function () {
   var q = new URLSearchParams(window.location.search);
   var body = { action: 'page.init', form: "open-house", qatest: q.get('qatest') || '', website: '' };
-  function fail() {
+  // 2026-10-06 (redteam #8): the shared notice says "you can still sign in",
+  // which is true for a page served by Apps Script (only the agent list was
+  // lost) and false here: without page.init there is no token, so nothing can
+  // be saved. Say so, offer a retry, keep the submit buttons off, and tell the
+  // server (best effort) so Durand hears about a dead page.
+  function fail(err) {
     var el = document.getElementById('pageLoadError');
-    if (el) el.style.display = 'block';
+    if (el) {
+      el.innerHTML = '<strong>This page could not load, so nothing can be saved right now.</strong> ' +
+        '<button type="button" id="pageLoadRetry" style="margin:0 8px;padding:6px 14px;font:inherit;">Try again</button> ' +
+        'If it keeps failing, tell the agent and they will take your details by hand. The team has been alerted.';
+      el.style.display = 'block';
+      var retry = document.getElementById('pageLoadRetry');
+      if (retry) retry.addEventListener('click', function () { window.location.reload(); });
+    }
+    var buttons = document.querySelectorAll('button[type="submit"], input[type="submit"]');
+    for (var i = 0; i < buttons.length; i++) buttons[i].disabled = true;
+    try {
+      fetch("https://script.google.com/macros/s/AKfycby9oMzIXMySG6s9qBf1r17gHML4zgtrxOPVt2uAMWvshjPlHDcouDMUITo6hm4Sa-C_lA/exec", { method: 'POST', body: JSON.stringify({ action: 'page.alert', form: "open-house",
+        reason: String((err && err.message) || err || 'page.init failed').slice(0, 160), website: '' }) }).catch(function () {});
+    } catch (alertErr) { /* best effort */ }
   }
   // Apps Script answers through a one-time redirect to script.googleusercontent.com,
   // and Google occasionally 404s that hop ("Sorry, unable to open the file at this
