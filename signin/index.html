@@ -370,10 +370,27 @@
     var el = document.getElementById('pageLoadError');
     if (el) el.style.display = 'block';
   }
-  fetch("https://script.google.com/macros/s/AKfycby9oMzIXMySG6s9qBf1r17gHML4zgtrxOPVt2uAMWvshjPlHDcouDMUITo6hm4Sa-C_lA/exec", { method: 'POST', body: JSON.stringify(body) })
-    .then(function (r) { return r.json(); })
+  // Apps Script answers through a one-time redirect to script.googleusercontent.com,
+  // and Google occasionally 404s that hop ("Sorry, unable to open the file at this
+  // time") before any of our code runs; seen on the Raffle Kit from a phone,
+  // 2026-09-30. One retry round-trip is cheap next to a dead kiosk page, so the
+  // init is tried up to three times (1 s, then 2 s apart) before the notice shows.
+  var attempts = 0;
+  function init() {
+    attempts += 1;
+    return fetch("https://script.google.com/macros/s/AKfycby9oMzIXMySG6s9qBf1r17gHML4zgtrxOPVt2uAMWvshjPlHDcouDMUITo6hm4Sa-C_lA/exec", { method: 'POST', body: JSON.stringify(body) })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res || !res.ok || typeof res.submitToken !== 'string') throw new Error('page.init rejected');
+        return res;
+      })
+      .catch(function (err) {
+        if (attempts >= 3) throw err;
+        return new Promise(function (resolve) { setTimeout(resolve, 1000 * attempts); }).then(init);
+      });
+  }
+  init()
     .then(function (res) {
-      if (!res || !res.ok || typeof res.submitToken !== 'string') { fail(); return; }
       res.agentList = Array.isArray(res.agentList) ? res.agentList : [];
       res.timeframeList = Array.isArray(res.timeframeList) ? res.timeframeList : [];
       res.param = function (name) { return q.get(name) || ''; };
@@ -390,13 +407,13 @@ var SUBMIT_TOKEN = __INIT.submitToken;
 // is -- a plain print-scriptlet with no expression escaping -- because like
 // SUBMIT_TOKEN this value is
 // generated server-side and is never visitor input, so there is nothing for
-// safeJsString() to protect against. Holding it does NOT by itself put the
+// safeJsString_() to protect against. Holding it does NOT by itself put the
 // backend in test mode: doPost re-verifies it against the script cache on
 // every submission and ignores it otherwise.
 var QA_TEST_TOKEN = __INIT.qaTestToken;
 // agent/address/name/email/phone all arrive as public URL query params
 // (anyone can craft a link to this exec URL), so they're embedded via
-// safeJsString(), not a raw HTML-escaped scriptlet -- see its comment in
+// safeJsString_(), not a raw HTML-escaped scriptlet -- see its comment in
 // Code.gs for why a plain print-scriptlet is the wrong escaping for a JS string
 // literal here.
 var PREFILL_AGENT = __INIT.param('agent');
@@ -412,7 +429,7 @@ var PREFILL_PHONE = __INIT.param('phone');
 // built from FUB's own lists instead of hardcoded <option> markup -- see
 // getAgentList / getFubTimeframes in Code.gs. Both are already JSON (each is
 // JSON.stringify'd server-side), so they're embedded through the raw,
-// force-printing scriptlet form rather than safeJsString(): unlike the
+// force-printing scriptlet form rather than safeJsString_(): unlike the
 // prefill values above, neither contains anything a visitor can put in a
 // query param. Both fail open to [], in which case the dropdown keeps just
 // its blank option.

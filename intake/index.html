@@ -841,10 +841,27 @@
     var el = document.getElementById('pageLoadError');
     if (el) el.style.display = 'block';
   }
-  fetch("https://script.google.com/macros/s/AKfycby9oMzIXMySG6s9qBf1r17gHML4zgtrxOPVt2uAMWvshjPlHDcouDMUITo6hm4Sa-C_lA/exec", { method: 'POST', body: JSON.stringify(body) })
-    .then(function (r) { return r.json(); })
+  // Apps Script answers through a one-time redirect to script.googleusercontent.com,
+  // and Google occasionally 404s that hop ("Sorry, unable to open the file at this
+  // time") before any of our code runs; seen on the Raffle Kit from a phone,
+  // 2026-09-30. One retry round-trip is cheap next to a dead kiosk page, so the
+  // init is tried up to three times (1 s, then 2 s apart) before the notice shows.
+  var attempts = 0;
+  function init() {
+    attempts += 1;
+    return fetch("https://script.google.com/macros/s/AKfycby9oMzIXMySG6s9qBf1r17gHML4zgtrxOPVt2uAMWvshjPlHDcouDMUITo6hm4Sa-C_lA/exec", { method: 'POST', body: JSON.stringify(body) })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res || !res.ok || typeof res.submitToken !== 'string') throw new Error('page.init rejected');
+        return res;
+      })
+      .catch(function (err) {
+        if (attempts >= 3) throw err;
+        return new Promise(function (resolve) { setTimeout(resolve, 1000 * attempts); }).then(init);
+      });
+  }
+  init()
     .then(function (res) {
-      if (!res || !res.ok || typeof res.submitToken !== 'string') { fail(); return; }
       res.agentList = Array.isArray(res.agentList) ? res.agentList : [];
       res.timeframeList = Array.isArray(res.timeframeList) ? res.timeframeList : [];
       res.param = function (name) { return q.get(name) || ''; };
@@ -867,7 +884,7 @@ const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycby9oMzIXMySG6s9qBf
 // is -- a plain print-scriptlet with no expression escaping -- because like
 // SUBMIT_TOKEN this value is
 // generated server-side and is never visitor input, so there is nothing for
-// safeJsString() to protect against. Holding it does NOT by itself put the
+// safeJsString_() to protect against. Holding it does NOT by itself put the
 // backend in test mode: doPost re-verifies it against the script cache on
 // every submission and ignores it otherwise.
 const QA_TEST_TOKEN = __INIT.qaTestToken;
@@ -886,7 +903,7 @@ if (QA_TEST_TOKEN) {
 // dropdown is built from FUB's own user roster instead of a hardcoded
 // <option> list -- see getAgentList in Code.gs. Already JSON (doGet
 // JSON.stringify's it), so it's embedded through the raw, force-printing
-// scriptlet form rather than safeJsString(): unlike the prefill values below,
+// scriptlet form rather than safeJsString_(): unlike the prefill values below,
 // it contains nothing a visitor can put in a query param. Fails open to [],
 // leaving the field with just its "Not sure" option. Populated here, before
 // the prefill block further down, so any option this dropdown ever needs to
