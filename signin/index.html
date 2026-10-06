@@ -451,6 +451,8 @@ var PREFILL_ADDRESS = __INIT.param('address');
 var PREFILL_NAME = __INIT.param('name');
 var PREFILL_EMAIL = __INIT.param('email');
 var PREFILL_PHONE = __INIT.param('phone');
+var PREFILL_PID = __INIT.param('pid'); // 2026-10-06 (#348c): signed FUB contact id from a generated link
+var PREFILL_SIG = __INIT.param('sig');
 // 2026-09-07, per Durand: the Hosting Agent and Timeframe dropdowns are
 // built from FUB's own lists instead of hardcoded <option> markup -- see
 // getAgentList / getFubTimeframes in Code.gs. Both are already JSON (each is
@@ -703,6 +705,7 @@ submitBtn.addEventListener('click', function () {
   var data = {
     website: document.getElementById('website').value,
     formToken: SUBMIT_TOKEN, pageVersion: (typeof PAGE_VERSION !== 'undefined' ? PAGE_VERSION : ''),
+    fubPersonId: PREFILL_PID || '', linkSig: PREFILL_SIG || '',
     visitorName: nameEl.value,
     email: emailEl.value,
     phone: digitsOnly(phoneEl.value),

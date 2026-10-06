@@ -1116,6 +1116,8 @@ const PREFILL_ROLE = __INIT.param('role');
 const PREFILL_NAME = __INIT.param('name');
 const PREFILL_EMAIL = __INIT.param('email');
 const PREFILL_PHONE = __INIT.param('phone');
+const PREFILL_PID = __INIT.param('pid'); // 2026-10-06 (#348c): signed FUB contact id from a generated link
+const PREFILL_SIG = __INIT.param('sig');
 
 if (PREFILL_NAME) {
   document.getElementById('buyer1Name').value = PREFILL_NAME;
@@ -1397,6 +1399,7 @@ form.addEventListener('submit', async (e) => {
   try {
     data.formToken = SUBMIT_TOKEN;
     data.pageVersion = (typeof PAGE_VERSION !== 'undefined' ? PAGE_VERSION : ''); // 2026-10-06 (redteam #21): hosted pages only
+    data.fubPersonId = PREFILL_PID || ''; data.linkSig = PREFILL_SIG || ''; // 2026-10-06 (#348c)
     // Only sent when this page load was actually issued a test token. The key
     // is omitted entirely otherwise, so a normal submission's payload is
     // exactly what it has always been.
