@@ -1353,7 +1353,6 @@ form.addEventListener('submit', async (e) => {
 
   try {
     data.formToken = SUBMIT_TOKEN;
-    data.pageVersion = '2026-10-05'; // must equal PAGE_VERSION_ in Code.js
     // Only sent when this page load was actually issued a test token. The key
     // is omitted entirely otherwise, so a normal submission's payload is
     // exactly what it has always been.
