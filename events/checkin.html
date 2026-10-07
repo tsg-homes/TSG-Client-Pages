@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Check-In | TSG</title>
+<meta name="tsg-design-system" content="https://claude.ai/artifact/95idpCrB8UNTjKZ5Q8jm3k">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tsg.css">
+<style>
+  .et-stats { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: 0 0 var(--space-5); }
+  .et-stat { background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--radius-md); padding: var(--space-3) var(--space-5); min-width: 120px; }
+  .et-stat__n { font-family: var(--font-mono); font-weight: 500; font-size: 26px; color: var(--heading); line-height: 1.1; }
+  .et-stat__l { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+  .et-roster { display: grid; gap: var(--space-2); }
+  .et-rowc { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); }
+  .et-rowc__name { font-weight: 700; color: var(--ink); }
+  .et-rowc__meta { font-size: 13px; color: var(--muted); }
+  .et-rowc--in { border-color: var(--good); }
+  .et-result { text-align: center; }
+  .et-result__name { font-size: 26px; font-weight: 900; color: var(--heading); margin: var(--space-2) 0 0; }
+  .et-result__big { font-size: 48px; font-weight: 900; margin: 0; }
+  .et-result--ok .et-result__big { color: var(--good); }
+  .et-result--warn .et-result__big { color: var(--warn-ink); }
+  .et-result--bad .et-result__big { color: var(--critical); }
+  #etVideo { width: 100%; max-width: 480px; border-radius: var(--radius-md); background: #000; display: block; margin: var(--space-3) auto; }
+  .et-search { margin: 0 0 var(--space-3); }
+  .et-events { display: grid; gap: var(--space-2); }
+</style>
+</head>
+<body class="tsg">
+<div id="pageLoadError"></div>
+<header class="tsg-band">
+  <div>
+    <p class="tsg-band__eyebrow">The Stawasz Group | Check-In | Confidential</p>
+    <h1 class="tsg-band__title" id="etTitle">Check-in</h1>
+    <p class="tsg-band__sub" id="etSub"></p>
+  </div>
+  <div class="tsg-band__meta"><div class="tsg-band__chips" id="etChips"></div></div>
+</header>
+<main class="tsg-page">
+  <section id="etKeySection">
+    <div class="tsg-section tsg-section--rule"><h2 class="tsg-section__label">Admin key</h2></div>
+    <form id="etKeyForm" class="tsg-form" novalidate>
+      <div class="field">
+        <label class="qlabel" for="adminKey">Admin key <span class="req">*</span></label>
+        <input type="password" id="adminKey" autocomplete="off">
+        <div class="hint">The ADMIN_KEY from the project's Script Properties. Remembered on this device until you press Forget.</div>
+      </div>
+      <button type="submit" class="tsg-btn" title="Checks the key against the server and remembers it on this device.">Unlock</button>
+    </form>
+  </section>
+
+  <section id="etPick" class="et-hidden">
+    <div class="tsg-section tsg-section--rule"><h2 class="tsg-section__label">Which event</h2></div>
+    <div class="et-events" id="etEvents"></div>
+  </section>
+
+  <section id="etResultSection" class="et-hidden">
+    <div class="tsg-section tsg-section--rule"><h2 class="tsg-section__label">Scan result</h2></div>
+    <div class="et-card et-result" id="etResult"></div>
+  </section>
+
+  <section id="etRosterSection" class="et-hidden">
+    <div class="tsg-section tsg-section--rule"><h2 class="tsg-section__label">Roster</h2>
+      <span class="tsg-section__note">
+        <button type="button" class="tsg-btn tsg-btn--sm" id="etScan" title="Opens the camera to scan a ticket QR code. On a phone, the camera app works too: scanning a ticket opens this page and checks the guest in.">Scan QR</button>
+        <button type="button" class="tsg-btn tsg-btn--sm tsg-btn--ghost" id="etRefresh" title="Reloads the roster and the counts from the server.">Refresh</button>
+      </span></div>
+    <div id="etScanner" class="et-hidden">
+      <video id="etVideo" playsinline muted></video>
+      <p class="et-note" id="etScanNote" style="text-align:center"></p>
+      <p style="text-align:center"><button type="button" class="tsg-btn tsg-btn--sm tsg-btn--ghost" id="etStopScan" title="Turns the camera off.">Stop scanning</button></p>
+    </div>
+    <div class="tsg-msg" id="etMsg"></div>
+    <div class="et-stats" id="etStats"></div>
+    <div class="field et-search"><label class="qlabel" for="etSearch">Find a guest</label><input type="search" id="etSearch" placeholder="Name, email or phone" autocomplete="off"></div>
+    <div class="et-roster" id="etRoster"></div>
+  </section>
+</main>
+<script src="vendor/jsQR.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var KEY = 'et_admin_key';
+  var eventId = ET.param('event');
+  var scanToken = ET.param('t');
+  var rows = [], counts = null, ev = null, stream = null, scanning = false, lastScan = '';
+
+  function key() { try { return window.localStorage.getItem(KEY) || ''; } catch (e) { return ''; } }
+  function setKey(v) { try { if (v) window.localStorage.setItem(KEY, v); else window.localStorage.removeItem(KEY); } catch (e) { /* private mode */ } }
+  function showKeyState() {
+    $('etChips').innerHTML = key()
+      ? '<button type="button" class="tsg-btn tsg-btn--sm tsg-btn--ghost" id="etForget" title="Forgets the admin key on this device.">Forget key</button>'
+      : ET.pill('neutral', 'Locked', 'Enter the admin key to check guests in.');
+    var f = $('etForget'); if (f) f.addEventListener('click', function () { setKey(''); location.reload(); });
+  }
+
+  // ---- Check-in call shared by the scanner, the QR link and the roster buttons ----
+  function checkin(token, undo) {
+    return ET.post({ action: 'checkin', token: token, adminKey: key(), by: 'door', undo: !!undo });
+  }
+  function showResult(r, undone) {
+    var el = $('etResult');
+    $('etResultSection').classList.remove('et-hidden');
+    if (!r || !r.ok) {
+      el.className = 'et-card et-result et-result--bad';
+      el.innerHTML = '<p class="et-result__big">Not valid</p><p class="et-note">' + ET.esc((r && r.error) || 'Could not reach the server.') + '</p>';
+      return;
+    }
+    var t = r.ticket;
+    var cls = undone ? 'et-result--warn' : (r.already ? 'et-result--warn' : 'et-result--ok');
+    var big = undone ? 'Undone' : (r.already ? 'Already in' : 'Welcome');
+    el.className = 'et-card et-result ' + cls;
+    el.innerHTML = '<p class="et-result__big">' + big + '</p>' +
+      '<p class="et-result__name">' + ET.esc(t.name) + '</p>' +
+      '<p class="et-ticket__meta">' + ET.esc(t.guestCount) + (t.guestCount === 1 ? ' guest' : ' guests') + ', including them' +
+      (t.qaTest ? ' (rehearsal ticket)' : '') + '</p>' +
+      (r.already && t.checkedInAt ? '<p class="et-note">First checked in ' + ET.esc(new Date(t.checkedInAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })) + '.</p>' : '') +
+      (t.status === 'checked_in'
+        ? '<p><button type="button" class="tsg-btn tsg-btn--sm tsg-btn--ghost" data-undo="' + ET.esc(t.token) + '" title="Reverses this check-in, for a scan made by mistake.">Undo check-in</button></p>'
+        : '');
+    var u = el.querySelector('[data-undo]');
+    if (u) u.addEventListener('click', function () { checkin(u.getAttribute('data-undo'), true).then(function (rr) { showResult(rr, true); loadRoster(); }); });
+    loadRoster();
+  }
+
+  // ---- Roster ----
+  function statusPill(r) {
+    if (r.status === 'checked_in') return ET.pill('good', 'Checked in', 'Scanned at the door.');
+    if (r.status === 'cancelled') return ET.pill('critical', 'Cancelled', 'This RSVP was cancelled.');
+    return ET.pill('neutral', 'Registered', 'Not yet checked in.');
+  }
+  function renderRoster() {
+    var q = $('etSearch').value.trim().toLowerCase();
+    var shown = rows.filter(function (r) {
+      if (!q) return true;
+      return (r.name + ' ' + r.email + ' ' + r.phone).toLowerCase().indexOf(q) !== -1;
+    }).sort(function (a, b) { return a.name.localeCompare(b.name); });
+    $('etRoster').innerHTML = shown.length ? shown.map(function (r) {
+      return '<div class="et-card et-rowc' + (r.status === 'checked_in' ? ' et-rowc--in' : '') + '">' +
+        '<div><div class="et-rowc__name">' + ET.esc(r.name) + (r.qaTest ? ' <span class="tsg-pill tsg-pill--critical" title="A rehearsal ticket. Not counted.">Test</span>' : '') + '</div>' +
+        '<div class="et-rowc__meta">' + ET.esc(r.guestCount) + (r.guestCount === 1 ? ' guest' : ' guests') + (r.email ? ', ' + ET.esc(r.email) : '') + (r.phone ? ', ' + ET.esc(r.phone) : '') + '</div></div>' +
+        '<div class="et-row" style="margin:0">' + statusPill(r) +
+        (r.status === 'checked_in'
+          ? ' <button type="button" class="tsg-btn tsg-btn--sm tsg-btn--ghost" data-undo="' + ET.esc(r.token) + '" title="Reverses this check-in.">Undo</button>'
+          : (r.status === 'cancelled' ? '' : ' <button type="button" class="tsg-btn tsg-btn--sm" data-in="' + ET.esc(r.token) + '" title="Checks this guest in without scanning.">Check in</button>')) +
+        '</div></div>';
+    }).join('') : '<p class="et-note">No one matches.</p>';
+    Array.prototype.forEach.call($('etRoster').querySelectorAll('[data-in]'), function (b) {
+      b.addEventListener('click', function () { b.disabled = true; checkin(b.getAttribute('data-in')).then(function (r) { showResult(r); }); });
+    });
+    Array.prototype.forEach.call($('etRoster').querySelectorAll('[data-undo]'), function (b) {
+      b.addEventListener('click', function () { b.disabled = true; checkin(b.getAttribute('data-undo'), true).then(function (r) { showResult(r, true); }); });
+    });
+  }
+  function renderStats() {
+    var c = counts || { registrations: 0, guests: 0, checkedIn: 0 };
+    $('etStats').innerHTML =
+      '<div class="et-stat" title="Live registrations, rehearsal tickets excluded."><div class="et-stat__n">' + c.registrations + '</div><div class="et-stat__l">RSVPs</div></div>' +
+      '<div class="et-stat" title="Guests expected across every live registration."><div class="et-stat__n">' + c.guests + '</div><div class="et-stat__l">Guests</div></div>' +
+      '<div class="et-stat" title="Guests whose ticket has been checked in."><div class="et-stat__n">' + c.checkedIn + '</div><div class="et-stat__l">Checked in</div></div>';
+  }
+  function loadRoster() {
+    if (!eventId) return Promise.resolve();
+    return ET.api({ api: 'roster', eventId: eventId, adminKey: key() }).then(function (r) {
+      if (!r || !r.ok) { ET.showMessage($('etMsg'), 'err', (r && r.error) || 'Could not load the roster.'); return; }
+      ET.hideMessage($('etMsg'));
+      rows = r.rows; counts = r.counts; ev = r.event;
+      document.title = 'Check-in: ' + ev.title + ' | TSG';
+      $('etTitle').textContent = ev.title;
+      $('etSub').textContent = ET.when(ev.startsAt, ev.endsAt) + (ev.venue ? ', ' + ev.venue : '');
+      $('etRosterSection').classList.remove('et-hidden');
+      renderStats(); renderRoster();
+    });
+  }
+
+  // ---- Event picker when no event is in the link ----
+  function pickEvent() {
+    return ET.api({ api: 'events', adminKey: key() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'Could not load events.');
+      var list = r.events.filter(function (e) { return e.status !== 'archived'; })
+        .sort(function (a, b) { return String(b.startsAt).localeCompare(String(a.startsAt)); });
+      $('etPick').classList.remove('et-hidden');
+      $('etEvents').innerHTML = list.length ? list.map(function (e) {
+        return '<a class="tsg-card" href="checkin.html?event=' + encodeURIComponent(e.id) + '" title="Opens the roster for this event."><div class="name">' + ET.esc(e.title) + '</div><div class="desc">' + ET.esc(e.slug) + ', ' + ET.esc(e.status) + '</div></a>';
+      }).join('') : '<p class="et-note">No events yet.</p>';
+    });
+  }
+
+  // ---- In-page scanner: BarcodeDetector where the browser has it, jsQR elsewhere ----
+  function tokenFromScan(text) {
+    try { var u = new URL(text); return u.searchParams.get('t') || ''; } catch (e) { return /^evt_[0-9a-f]{20}\.[0-9a-f]{32}$/.test(text) ? text : ''; }
+  }
+  function onScan(text) {
+    var t = tokenFromScan(text);
+    if (!t || t === lastScan) return;
+    lastScan = t;
+    setTimeout(function () { lastScan = ''; }, 4000);
+    checkin(t).then(function (r) { showResult(r); });
+  }
+  function startScan() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $('etScanNote').textContent = 'This browser has no camera access. Use the phone camera app on the ticket instead.'; $('etScanner').classList.remove('et-hidden'); return; }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(function (s) {
+      stream = s; scanning = true;
+      var v = $('etVideo'); v.srcObject = s; v.play();
+      $('etScanner').classList.remove('et-hidden');
+      var detector = ('BarcodeDetector' in window) ? new window.BarcodeDetector({ formats: ['qr_code'] }) : null;
+      $('etScanNote').textContent = detector ? 'Point the camera at the ticket code.' : 'Point the camera at the ticket code. (Software decoder)';
+      var canvas = document.createElement('canvas');
+      var ctx = canvas.getContext('2d', { willReadFrequently: true });
+      function tick() {
+        if (!scanning) return;
+        if (v.readyState >= 2) {
+          if (detector) {
+            detector.detect(v).then(function (codes) { if (codes && codes.length) onScan(codes[0].rawValue); }).catch(function () {});
+          } else if (window.jsQR) {
+            canvas.width = v.videoWidth; canvas.height = v.videoHeight;
+            ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+            var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var code = window.jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+            if (code && code.data) onScan(code.data);
+          }
+        }
+        setTimeout(tick, 250);
+      }
+      tick();
+    }).catch(function () {
+      $('etScanner').classList.remove('et-hidden');
+      $('etScanNote').textContent = 'Camera permission was refused. Use the phone camera app on the ticket instead, or allow the camera and try again.';
+    });
+  }
+  function stopScan() {
+    scanning = false;
+    if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
+    $('etScanner').classList.add('et-hidden');
+  }
+
+  // ---- Wiring ----
+  $('etKeyForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var v = $('adminKey').value.trim(); if (!v) return;
+    setKey(v); start();
+  });
+  $('etSearch').addEventListener('input', renderRoster);
+  $('etRefresh').addEventListener('click', function () { loadRoster(); });
+  $('etScan').addEventListener('click', startScan);
+  $('etStopScan').addEventListener('click', stopScan);
+
+  function start() {
+    showKeyState();
+    if (!key()) return;
+    var first;
+    if (scanToken) {
+      // Opened from a scanned ticket: check in at once, then show the roster of that event.
+      first = checkin(scanToken).then(function (r) {
+        if (r && r.ok && !eventId) { eventId = scanToken.split('.')[0]; }
+        showResult(r);
+        if (!r || !r.ok) { if (r && r.code === 'forbidden') throw new Error('Not allowed.'); }
+      });
+    } else if (eventId) first = loadRoster();
+    else first = pickEvent();
+    first.then(function () { $('etKeySection').classList.add('et-hidden'); }).catch(function (err) {
+      setKey(''); showKeyState();
+      $('pageLoadError').textContent = err.message; $('pageLoadError').style.display = 'block';
+    });
+  }
+  start();
+  setInterval(function () { if (key() && eventId && !scanning) loadRoster(); }, 30000);
+})();
+</script>
+</body>
+</html>

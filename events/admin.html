@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Events Admin | TSG</title>
+<meta name="tsg-design-system" content="https://claude.ai/artifact/95idpCrB8UNTjKZ5Q8jm3k">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tsg.css">
+<style>
+  .et-list { display: grid; gap: var(--space-3); }
+  .et-event { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); align-items: center; justify-content: space-between; }
+  .et-event__name { font-weight: 700; color: var(--heading); font-size: 15px; }
+  .et-event__meta { font-size: 13px; color: var(--muted); }
+  .et-two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+  @media (max-width: 600px) { .et-two { grid-template-columns: 1fr; } }
+  .et-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+  .et-counts { display: flex; flex-wrap: wrap; gap: var(--space-4); font-size: 14px; color: var(--ink-2); margin: var(--space-2) 0 0; }
+  .et-counts strong { font-family: var(--font-mono); font-weight: 500; color: var(--heading); }
+</style>
+</head>
+<body class="tsg">
+<div id="pageLoadError"></div>
+<header class="tsg-band">
+  <div>
+    <p class="tsg-band__eyebrow">The Stawasz Group | Events Admin | Confidential</p>
+    <h1 class="tsg-band__title">Events</h1>
+    <p class="tsg-band__sub">Create and edit events, watch the counts, open the roster.</p>
+  </div>
+  <div class="tsg-band__meta">
+    <div class="tsg-band__chips" id="etKeyChip"></div>
+  </div>
+</header>
+
+<main class="tsg-page">
+  <section id="etKeySection">
+    <div class="tsg-section tsg-section--rule"><h2 class="tsg-section__label">Admin key</h2></div>
+    <form id="etKeyForm" class="tsg-form" novalidate>
+      <div class="field">
+        <label class="qlabel" for="adminKey">Admin key <span class="req">*</span></label>
+        <input type="password" id="adminKey" autocomplete="off">
+        <div class="hint">The ADMIN_KEY value from the project's Script Properties. Remembered on this device until you press Forget.</div>
+      </div>
+      <button type="submit" class="tsg-btn" title="Checks the key against the server and remembers it on this device.">Unlock</button>
+    </form>
+  </section>
+
+  <section id="etListSection" class="et-hidden">
+    <div class="tsg-section tsg-section--rule"><h2 class="tsg-section__label">All events</h2>
+      <span class="tsg-section__note"><button type="button" class="tsg-btn tsg-btn--sm" id="etNew" title="Starts a blank event form below.">New event</button></span></div>
+    <div class="tsg-msg" id="etListMsg"></div>
+    <div class="et-list" id="etList"></div>
+  </section>
+
+  <section id="etEditSection" class="et-hidden">
+    <div class="tsg-section tsg-section--rule"><h2 class="tsg-section__label" id="etEditTitle">New event</h2></div>
+    <div class="tsg-msg" id="etEditMsg"></div>
+    <form id="etEditForm" class="tsg-form" novalidate>
+      <input type="hidden" id="f_id">
+      <div class="field">
+        <label class="qlabel" for="f_title">Title <span class="req">*</span></label>
+        <input type="text" id="f_title" maxlength="120" required>
+      </div>
+      <div class="field">
+        <label class="qlabel" for="f_slug">Link name (slug)</label>
+        <input type="text" id="f_slug" maxlength="60" pattern="[a-z0-9]+(-[a-z0-9]+)*">
+        <div class="hint">Lowercase letters, digits and hyphens. Made from the title when blank. Cannot change after the event exists: it names the data file and the public link.</div>
+      </div>
+      <div class="field">
+        <label class="qlabel" for="f_description">Description</label>
+        <textarea id="f_description" rows="5" maxlength="2000"></textarea>
+        <div class="hint">Plain text. Line breaks are kept.</div>
+      </div>
+      <div class="et-two">
+        <div class="field"><label class="qlabel" for="f_venue">Venue</label><input type="text" id="f_venue" maxlength="300"></div>
+        <div class="field"><label class="qlabel" for="f_address">Address</label><input type="text" id="f_address" maxlength="300"></div>
+      </div>
+      <div class="et-two">
+        <div class="field"><label class="qlabel" for="f_startsAt">Starts (<span class="et-zone"></span>) <span class="req">*</span></label><input type="datetime-local" id="f_startsAt" required></div>
+        <div class="field"><label class="qlabel" for="f_endsAt">Ends (<span class="et-zone"></span>)</label><input type="datetime-local" id="f_endsAt"></div>
+      </div>
+      <div class="et-two">
+        <div class="field"><label class="qlabel" for="f_rsvpOpensAt">RSVPs open (<span class="et-zone"></span>)</label><input type="datetime-local" id="f_rsvpOpensAt"><div class="hint">Blank means as soon as the event is published.</div></div>
+        <div class="field"><label class="qlabel" for="f_rsvpClosesAt">RSVPs close (<span class="et-zone"></span>)</label><input type="datetime-local" id="f_rsvpClosesAt"><div class="hint">Blank means at the start time.</div></div>
+      </div>
+      <div class="et-two">
+        <div class="field"><label class="qlabel" for="f_capacity">Capacity</label><input type="number" id="f_capacity" min="1" step="1"><div class="hint">Total guests. Blank means unlimited.</div></div>
+        <div class="field"><label class="qlabel" for="f_status">Status</label>
+          <select id="f_status">
+            <option value="draft">Draft (hidden)</option>
+            <option value="published">Published (RSVPs open per the dates)</option>
+            <option value="closed">Closed (page visible, no RSVPs)</option>
+            <option value="archived">Archived (hidden)</option>
+          </select></div>
+      </div>
+      <div class="et-two">
+        <div class="field"><label class="qlabel" for="f_fubTag">Follow Up Boss tag</label><input type="text" id="f_fubTag" maxlength="80"><div class="hint">Added to every registrant. Blank means "Event: " plus the title. The event's FUB automation triggers on this tag.</div></div>
+        <div class="field"><label class="qlabel" for="f_contactEmail">Contact email shown to guests</label><input type="email" id="f_contactEmail" maxlength="300"></div>
+      </div>
+      <div class="et-actions">
+        <button type="submit" class="tsg-btn" id="etSave" title="Saves the event. A published event is live the moment it saves.">Save</button>
+        <button type="button" class="tsg-btn tsg-btn--ghost" id="etCancel" title="Closes the form without saving.">Cancel</button>
+      </div>
+    </form>
+  </section>
+</main>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var KEY = 'et_admin_key';
+  // Every time a person sees is in that person's own zone (Durand, 2026-10-07).
+  var TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York';
+  var TZ_NAME = (new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).formatToParts(new Date()).filter(function (x) { return x.type === 'timeZoneName'; })[0] || {}).value || TZ;
+  var FIELDS = ['title', 'slug', 'description', 'venue', 'address', 'startsAt', 'endsAt', 'rsvpOpensAt', 'rsvpClosesAt', 'capacity', 'status', 'fubTag', 'contactEmail'];
+  var DATES = ['startsAt', 'endsAt', 'rsvpOpensAt', 'rsvpClosesAt'];
+  var events = [];
+
+  function key() { try { return window.localStorage.getItem(KEY) || ''; } catch (e) { return ''; } }
+  function setKey(v) { try { if (v) window.localStorage.setItem(KEY, v); else window.localStorage.removeItem(KEY); } catch (e) { /* private mode */ } }
+
+  // datetime-local has no zone. Times on this page are in the device's zone:
+  // convert "YYYY-MM-DDTHH:MM" there to an ISO instant and back, with the
+  // offset read from Intl for that very instant (so DST edges are right).
+  function nyOffsetMinutes(date) {
+    var parts = new Intl.DateTimeFormat('en-US', { timeZone: TZ, hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      .formatToParts(date).reduce(function (o, p) { o[p.type] = p.value; return o; }, {});
+    var asUtc = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour) % 24, Number(parts.minute), Number(parts.second));
+    return Math.round((asUtc - date.getTime()) / 60000);
+  }
+  function nyLocalToIso(local) {
+    if (!local) return '';
+    var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(local);
+    if (!m) return '';
+    var guess = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
+    var off = nyOffsetMinutes(new Date(guess));
+    var inst = guess - off * 60000;
+    off = nyOffsetMinutes(new Date(inst));                 // second pass across a DST edge
+    return new Date(guess - off * 60000).toISOString();
+  }
+  function isoToNyLocal(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    var parts = new Intl.DateTimeFormat('en-US', { timeZone: TZ, hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+      .formatToParts(d).reduce(function (o, p) { o[p.type] = p.value; return o; }, {});
+    return parts.year + '-' + parts.month + '-' + parts.day + 'T' + (parts.hour === '24' ? '00' : parts.hour) + ':' + parts.minute;
+  }
+  function fmt(iso) {
+    return iso ? new Intl.DateTimeFormat('en-US', { timeZone: TZ, dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso)) : '';
+  }
+
+  function showKeyState() {
+    $('etKeyChip').innerHTML = key()
+      ? '<button type="button" class="tsg-btn tsg-btn--sm tsg-btn--ghost" id="etForget" title="Forgets the admin key on this device. You will be asked for it again.">Forget key</button>'
+      : ET.pill('neutral', 'Locked', 'Enter the admin key to manage events.');
+    var f = $('etForget');
+    if (f) f.addEventListener('click', function () { setKey(''); location.reload(); });
+  }
+
+  function statusPill(s) {
+    if (s === 'published') return ET.pill('good', 'Published', 'Visible to the public; RSVPs follow the open and close dates.');
+    if (s === 'draft') return ET.pill('neutral', 'Draft', 'Hidden from the public.');
+    if (s === 'closed') return ET.pill('warn', 'Closed', 'Page visible, no new RSVPs.');
+    return ET.pill('neutral', 'Archived', 'Hidden and finished.');
+  }
+
+  function loadList() {
+    return ET.api({ api: 'events', adminKey: key() }).then(function (r) {
+      if (!r || !r.ok) { throw new Error((r && r.error) || 'Could not load events.'); }
+      events = r.events.slice().sort(function (a, b) { return String(b.startsAt).localeCompare(String(a.startsAt)); });
+      $('etKeySection').classList.add('et-hidden');
+      $('etListSection').classList.remove('et-hidden');
+      if (!events.length) { $('etList').innerHTML = '<p class="et-note">No events yet. Press New event.</p>'; return; }
+      $('etList').innerHTML = events.map(function (e) {
+        return '<div class="et-card et-event" data-id="' + ET.esc(e.id) + '">' +
+          '<div><div class="et-event__name">' + ET.esc(e.title) + '</div>' +
+          '<div class="et-event__meta">' + ET.esc(fmt(e.startsAt)) + ' ' + TZ_NAME + ', link name ' + ET.esc(e.slug) + '</div></div>' +
+          '<div class="et-row" style="margin:0">' + statusPill(e.status) +
+          ' <a class="tsg-btn tsg-btn--sm tsg-btn--ghost" href="event.html?e=' + encodeURIComponent(e.slug) + '" target="_blank" rel="noopener" title="Opens the public event page in a new tab.">Public page</a>' +
+          ' <a class="tsg-btn tsg-btn--sm tsg-btn--ghost" href="checkin.html?event=' + encodeURIComponent(e.id) + '" title="Opens the roster and check-in page for this event.">Roster</a>' +
+          ' <button type="button" class="tsg-btn tsg-btn--sm" data-edit="' + ET.esc(e.id) + '" title="Opens this event in the editor below.">Edit</button></div></div>';
+      }).join('');
+      Array.prototype.forEach.call(document.querySelectorAll('[data-edit]'), function (b) {
+        b.addEventListener('click', function () { openEditor(b.getAttribute('data-edit')); });
+      });
+    });
+  }
+
+  function fillForm(ev) {
+    FIELDS.forEach(function (f) {
+      var el = $('f_' + f);
+      var v = ev ? ev[f] : '';
+      if (DATES.indexOf(f) !== -1) el.value = isoToNyLocal(v);
+      else el.value = (v === null || v === undefined) ? '' : v;
+    });
+    $('f_id').value = ev ? ev.id : '';
+    $('f_slug').readOnly = !!ev;
+    if (!ev) $('f_status').value = 'draft';
+    $('etEditTitle').textContent = ev ? 'Edit: ' + ev.title : 'New event';
+  }
+
+  function openEditor(id) {
+    ET.hideMessage($('etEditMsg'));
+    $('etEditSection').classList.remove('et-hidden');
+    if (!id) { fillForm(null); $('etEditSection').scrollIntoView({ behavior: 'smooth' }); return; }
+    ET.api({ api: 'event_admin', id: id, adminKey: key() }).then(function (r) {
+      if (!r || !r.ok) { ET.showMessage($('etEditMsg'), 'err', (r && r.error) || 'Could not load the event.'); return; }
+      fillForm(r.event);
+      var c = r.counts;
+      ET.showMessage($('etEditMsg'), 'ok', c.registrations + ' RSVPs, ' + c.guests + ' guests, ' + c.checkedIn + ' checked in.');
+      $('etEditSection').scrollIntoView({ behavior: 'smooth' });
+    });
+  }
+
+  function save(e) {
+    e.preventDefault();
+    var form = $('etEditForm');
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+    var body = { action: 'event_save', adminKey: key() };
+    if ($('f_id').value) body.id = $('f_id').value;
+    FIELDS.forEach(function (f) {
+      var v = $('f_' + f).value;
+      body[f] = DATES.indexOf(f) !== -1 ? nyLocalToIso(v) : v;
+    });
+    var btn = $('etSave'); btn.disabled = true; btn.textContent = 'Saving';
+    ET.post(body).then(function (r) {
+      btn.disabled = false; btn.textContent = 'Save';
+      if (!r || !r.ok) { ET.showMessage($('etEditMsg'), 'err', (r && r.error) || 'The event could not be saved.'); return; }
+      ET.showMessage($('etEditMsg'), 'ok', 'Saved. ' + (r.event.status === 'published' ? 'The public page is live.' : 'The event is ' + r.event.status + '.'));
+      fillForm(r.event);
+      return loadList();
+    }).catch(function (err) {
+      btn.disabled = false; btn.textContent = 'Save';
+      ET.showMessage($('etEditMsg'), 'err', err.message || 'The server could not be reached.');
+    });
+  }
+
+  $('etKeyForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var v = $('adminKey').value.trim();
+    if (!v) return;
+    setKey(v);
+    loadList().then(showKeyState).catch(function (err) {
+      setKey('');
+      ET.showMessage($('etListMsg'), 'err', err.message);
+      $('etListSection').classList.remove('et-hidden');
+      $('etKeySection').classList.remove('et-hidden');
+    });
+  });
+  $('etNew').addEventListener('click', function () { openEditor(''); });
+  $('etCancel').addEventListener('click', function () { $('etEditSection').classList.add('et-hidden'); });
+  $('etEditForm').addEventListener('submit', save);
+
+  Array.prototype.forEach.call(document.querySelectorAll('.et-zone'), function (el) { el.textContent = TZ_NAME; el.title = 'Times are entered and shown in your own time zone, ' + TZ + '.'; });
+  showKeyState();
+  if (key()) {
+    loadList().catch(function (err) {
+      setKey(''); showKeyState();
+      ET.showMessage($('etListMsg'), 'err', err.message);
+      $('etListSection').classList.remove('et-hidden');
+    });
+  }
+})();
+</script>
+</body>
+</html>

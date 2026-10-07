@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSG Event</title>
+<meta name="tsg-design-system" content="https://claude.ai/artifact/95idpCrB8UNTjKZ5Q8jm3k">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tsg.css">
+</head>
+<body class="tsg">
+<div id="pageLoadError"></div>
+
+<header class="tsg-band">
+  <div>
+    <p class="tsg-band__eyebrow tsg-band__eyebrow--client">The Stawasz Group | Event</p>
+    <h1 class="tsg-band__title" id="etTitle">Loading event</h1>
+    <p class="tsg-band__sub" id="etWhen"></p>
+  </div>
+  <div class="tsg-band__meta">
+    <div class="tsg-band__chips" id="etChips"></div>
+  </div>
+</header>
+
+<main class="tsg-page">
+  <div class="et-grid">
+    <section>
+      <div class="tsg-section tsg-section--rule"><h2 class="tsg-section__label">Details</h2></div>
+      <div class="et-card">
+        <dl class="et-facts">
+          <dt>When</dt><dd id="etWhenLong"></dd>
+          <dt>Where</dt><dd id="etWhere"></dd>
+        </dl>
+        <p class="et-desc" id="etDesc" style="margin-top:16px"></p>
+      </div>
+    </section>
+
+    <section id="etRsvpSection">
+      <div class="tsg-section tsg-section--rule"><h2 class="tsg-section__label">RSVP</h2><span class="tsg-section__note" id="etSpots"></span></div>
+      <div class="tsg-msg" id="etMsg"></div>
+      <form id="etForm" class="tsg-form" novalidate>
+        <div class="field">
+          <label class="qlabel" for="name">Your name <span class="req">*</span></label>
+          <input type="text" id="name" name="name" autocomplete="name" maxlength="60" required>
+        </div>
+        <div class="field">
+          <label class="qlabel" for="email">Email <span class="req">*</span></label>
+          <input type="email" id="email" name="email" autocomplete="email" maxlength="254" required>
+          <div class="hint">Your confirmation and ticket link go here.</div>
+        </div>
+        <div class="field">
+          <label class="qlabel" for="phone">Mobile phone</label>
+          <input type="tel" id="phone" name="phone" autocomplete="tel" maxlength="30">
+          <div class="hint">Optional. Used only if we need to reach you about the event.</div>
+        </div>
+        <div class="field">
+          <label class="qlabel" for="guestCount">Guests, including you <span class="req">*</span></label>
+          <select id="guestCount" name="guestCount"></select>
+        </div>
+        <div class="field">
+          <label class="et-consent"><input type="checkbox" id="consent" name="consent" required>
+            <span id="etConsentText">By checking this box, I agree to be contacted by The Stawasz Group and its agents by phone, text message, and email, including by autodialer or prerecorded message, about this and other properties. Consent is not a condition of any purchase or service. Message and data rates may apply. Reply STOP to opt out at any time. <span class="req">*</span></span></label>
+        </div>
+        <div class="et-trap" aria-hidden="true"><label for="website">Website</label><input type="text" id="website" name="website" tabindex="-1" autocomplete="off"></div>
+        <button type="submit" class="tsg-btn tsg-btn--submit" id="etSubmit" title="Registers you for this event and shows your ticket with its QR code.">RSVP</button>
+      </form>
+      <div id="etClosed" class="tsg-callout et-hidden">
+        <span class="tsg-callout__tag" title="RSVPs are not being accepted for this event right now.">Closed</span>
+        <p class="tsg-callout__title" id="etClosedTitle">RSVPs are closed</p>
+        <p class="tsg-callout__body" id="etClosedBody"></p>
+      </div>
+    </section>
+  </div>
+
+  <section id="etDone" class="et-hidden">
+    <div class="tsg-section tsg-section--rule"><h2 class="tsg-section__label">Your ticket</h2></div>
+    <div class="tsg-msg tsg-msg--ok" id="etDoneMsg" style="display:block"></div>
+    <div class="et-card" id="etTicket"></div>
+  </section>
+</main>
+
+<script src="vendor/qrcode.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var slug = ET.param('e');
+  var ev = null;
+  var loadedAt = Date.now();
+
+  function fail(text) {
+    var el = $('pageLoadError');
+    el.textContent = text;
+    el.style.display = 'block';
+    $('etTitle').textContent = 'Event not available';
+  }
+
+  function fillGuests(max) {
+    var s = $('guestCount');
+    s.innerHTML = '';
+    for (var i = 1; i <= max; i++) {
+      var o = document.createElement('option');
+      o.value = String(i); o.textContent = String(i);
+      s.appendChild(o);
+    }
+  }
+
+  function render() {
+    document.title = ev.title + ' | TSG';
+    $('etTitle').textContent = ev.title;
+    $('etWhen').textContent = ET.when(ev.startsAt, ev.endsAt);
+    $('etWhenLong').textContent = ET.when(ev.startsAt, ev.endsAt) + ' (your local time)';
+    $('etWhere').textContent = [ev.venue, ev.address].filter(Boolean).join(', ') || 'To be announced';
+    $('etDesc').textContent = ev.description || '';
+    var chips = [];
+    if (ev.rsvpOpen) chips.push(ET.pill('good', 'RSVPs open', 'You can register for this event now.'));
+    else if (ev.capacity !== null && ev.spotsLeft === 0) chips.push(ET.pill('warn', 'Full', 'Every spot is taken.'));
+    else chips.push(ET.pill('neutral', 'RSVPs closed', 'Registration is not open at the moment.'));
+    $('etChips').innerHTML = chips.join('');
+    if (ev.capacity !== null) {
+      $('etSpots').textContent = ev.spotsLeft + (ev.spotsLeft === 1 ? ' spot left' : ' spots left');
+      $('etSpots').title = 'Spots still open out of ' + ev.capacity + '.';
+    }
+    if (!ev.rsvpOpen) {
+      $('etForm').classList.add('et-hidden');
+      $('etClosed').classList.remove('et-hidden');
+      var body = 'Registration is not open for this event.';
+      if (ev.capacity !== null && ev.spotsLeft === 0) { $('etClosedTitle').textContent = 'This event is full'; body = 'Every spot has been taken.'; }
+      else if (ev.rsvpClosesAt && new Date(ev.rsvpClosesAt) <= new Date()) body = 'The RSVP deadline has passed.';
+      else if (ev.rsvpOpensAt && new Date(ev.rsvpOpensAt) > new Date()) { $('etClosedTitle').textContent = 'RSVPs open soon'; body = 'Check back shortly.'; }
+      if (ev.contactEmail) body += ' Questions: ' + ev.contactEmail + '.';
+      $('etClosedBody').textContent = body;
+    }
+  }
+
+  function submit(e) {
+    e.preventDefault();
+    var form = $('etForm');
+    var msg = $('etMsg');
+    ET.hideMessage(msg);
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+    var btn = $('etSubmit');
+    btn.disabled = true; btn.textContent = 'Sending';
+    ET.post({
+      action: 'rsvp', slug: slug,
+      name: $('name').value, email: $('email').value, phone: $('phone').value,
+      guestCount: $('guestCount').value, consent: $('consent').checked,
+      website: $('website').value, fillMs: Date.now() - loadedAt
+    }).then(function (r) {
+      btn.disabled = false; btn.textContent = 'RSVP';
+      if (!r || !r.ok) { ET.showMessage(msg, 'err', (r && r.error) || 'The RSVP could not be saved. Please try again.'); return; }
+      if (!r.ticket) { ET.showMessage(msg, 'ok', 'Thank you.'); return; }
+      $('etRsvpSection').classList.add('et-hidden');
+      $('etDone').classList.remove('et-hidden');
+      $('etDoneMsg').textContent = r.updated
+        ? 'Your RSVP is updated. This is the same ticket as before.'
+        : 'You are registered. Save this ticket: screenshot the code or open the ticket link.';
+      ET.renderTicket($('etTicket'), r.ticket);
+      $('etDone').scrollIntoView({ behavior: 'smooth' });
+    }).catch(function () {
+      btn.disabled = false; btn.textContent = 'RSVP';
+      ET.showMessage(msg, 'err', 'We could not reach the server. Check your connection and try again.');
+    });
+  }
+
+  if (!slug) { fail('This link is missing the event. Ask the host for the event link.'); return; }
+  ET.initQa().then(function () {
+    ET.showQaBanner();
+    return ET.api({ api: 'event', slug: slug });
+  }).then(function (r) {
+    if (!r || !r.ok) { fail((r && r.error) || 'This event could not be loaded.'); return; }
+    ev = r.event;
+    fillGuests(10);
+    render();
+    $('etForm').addEventListener('submit', submit);
+  }).catch(function () {
+    fail('The event could not be loaded. Please refresh the page or try again shortly.');
+  });
+})();
+</script>
+</body>
+</html>

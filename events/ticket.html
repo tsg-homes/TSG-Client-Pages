@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Ticket | TSG</title>
+<meta name="tsg-design-system" content="https://claude.ai/artifact/95idpCrB8UNTjKZ5Q8jm3k">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tsg.css">
+</head>
+<body class="tsg">
+<div id="pageLoadError"></div>
+<header class="tsg-band">
+  <div>
+    <p class="tsg-band__eyebrow tsg-band__eyebrow--client">The Stawasz Group | Ticket</p>
+    <h1 class="tsg-band__title" id="etTitle">Your ticket</h1>
+    <p class="tsg-band__sub" id="etWhen"></p>
+  </div>
+</header>
+<main class="tsg-page">
+  <div class="tsg-form">
+    <p class="et-loading" id="etLoading">Loading your ticket</p>
+    <div class="et-card et-hidden" id="etTicket"></div>
+    <p class="et-note" id="etHelp"></p>
+  </div>
+</main>
+<script src="vendor/qrcode.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  // Two ways in: ?t=<token> from the confirmation page and the QR, or
+  // ?e=<slug>&c=<contact id>&m=<email> from the event's FUB email, where FUB
+  // fills c and m from its merge fields (Durand, 2026-10-06).
+  var params = ET.param('t') ? { api: 'ticket', token: ET.param('t') }
+             : { api: 'ticket', slug: ET.param('e'), contact: ET.param('c'), email: ET.param('m') };
+  function fail(text) {
+    $('etLoading').classList.add('et-hidden');
+    var el = $('pageLoadError');
+    el.textContent = text; el.style.display = 'block';
+  }
+  ET.api(params).then(function (r) {
+    if (!r || !r.ok) { fail((r && r.error) || 'This ticket could not be found.'); return; }
+    var t = r.ticket;
+    document.title = 'Ticket: ' + t.event.title + ' | TSG';
+    $('etTitle').textContent = t.event.title;
+    $('etWhen').textContent = ET.when(t.event.startsAt, t.event.endsAt) + (t.event.venue ? ', ' + t.event.venue : '');
+    $('etLoading').classList.add('et-hidden');
+    $('etTicket').classList.remove('et-hidden');
+    ET.renderTicket($('etTicket'), t);
+    if (t.event.contactEmail) $('etHelp').textContent = 'Questions about the event: ' + t.event.contactEmail;
+  }).catch(function () { fail('The ticket could not be loaded. Please refresh or try again shortly.'); });
+})();
+</script>
+</body>
+</html>
