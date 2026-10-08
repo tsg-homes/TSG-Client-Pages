@@ -375,7 +375,7 @@
 (function () {
   var q = new URLSearchParams(window.location.search);
   document.documentElement.classList.add('tsg-init'); // 2026-10-06 (redteam UX): visible loading state until page.init answers
-  window.PAGE_VERSION = "2026-10-08";
+  window.PAGE_VERSION = "2026-10-08.2";
   var body = { action: 'page.init', form: "open-house", qatest: q.get('qatest') || '', website: '', pageVersion: window.PAGE_VERSION };
   // 2026-10-06 (redteam #8): the shared notice says "you can still sign in",
   // which is true for a page served by Apps Script (only the agent list was
@@ -468,6 +468,7 @@ var QA_TEST_TOKEN = __INIT.qaTestToken;
 // literal here.
 var PREFILL_AGENT = __INIT.param('agent');
 var PREFILL_ADDRESS = __INIT.param('address');
+var PREFILL_PRICE = __INIT.param('price'); // 2026-10-08: the listing price from the agent's setup
 // Added 2026-09-03 for the "Generate Link" setup page: an agent who
 // already knows who's coming can bake their name/email/phone into the
 // link so the visitor only has to confirm it. Optional -- all default to
@@ -522,7 +523,7 @@ function readSavedSetup() {
   return null;
 }
 function saveSetup(st) {
-  try { window.localStorage.setItem(SETUP_KEY, JSON.stringify({ agent: st.agent, address: st.address, day: todayKey() })); } catch (e) { /* storage unavailable */ }
+  try { window.localStorage.setItem(SETUP_KEY, JSON.stringify({ agent: st.agent, address: st.address, price: st.price || '', day: todayKey() })); } catch (e) { /* storage unavailable */ }
 }
 function clearSavedSetup() {
   try { window.localStorage.removeItem(SETUP_KEY); } catch (e) { /* storage unavailable */ }
@@ -540,7 +541,7 @@ function cleanSetupAgent(name) {
 }
 var setup = null;
 if (collapseSpaces(PREFILL_ADDRESS)) {
-  setup = { agent: cleanSetupAgent(PREFILL_AGENT), address: collapseSpaces(PREFILL_ADDRESS) };
+  setup = { agent: cleanSetupAgent(PREFILL_AGENT), address: collapseSpaces(PREFILL_ADDRESS), price: digitsOnly(PREFILL_PRICE) };
   saveSetup(setup);
 } else {
   setup = readSavedSetup();
@@ -746,6 +747,7 @@ submitBtn.addEventListener('click', function () {
     propertyState: addrParts.state,
     propertyZip: addrParts.zip,
     propertyAddress: setup.address,
+    listingPrice: setup.price || '',
     timeframe: document.getElementById('timeframe').value,
     howHeard: document.getElementById('howHeard').value,
     referredBy: referralChosen() ? referredByEl.value : '',
