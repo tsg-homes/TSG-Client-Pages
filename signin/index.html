@@ -320,7 +320,7 @@
           <option value="Zillow">Zillow</option>
           <option value="Realtor.com">Realtor.com</option>
           <option value="Sign / Drive-by">Sign / Drive-by</option>
-          <option value="Agent Referral">Agent Referral</option>
+          <option value="Referral">Referral</option>
           <option value="Social Media">Social Media</option>
           <option value="Other">Other</option>
           <option value="N/A">N/A</option>
@@ -329,6 +329,10 @@
       <!-- 2026-10-01, per Durand: optional referrer, written to FUB's
            "Referred By" custom field and linked as a Referred By
            relationship -- same field the intake form has. -->
+      <!-- 2026-10-08, per Durand: the three referrer questions show only when
+           "Referral" is chosen under "How Did You Hear". Hidden, the page sends
+           N/A for the referrer, which the server already treats as no referrer. -->
+      <div id="referrerGroup" style="display:none">
       <div class="field">
         <label class="qlabel" for="referredBy">Who referred you to us? <span class="req">*</span></label>
         <input type="text" name="referredBy" id="referredBy" maxlength="200">
@@ -352,6 +356,7 @@
           <div class="hint">Enter N/A if you don't have it.</div>
           <div class="hint hint--err" id="referredByEmailErr"></div>
         </div>
+      </div>
       </div>
       <div class="field">
         <label class="qlabel" for="notes">Notes <span class="req">*</span></label>
@@ -648,8 +653,11 @@ referredByPhoneEl.addEventListener('blur', function () {
 });
 
 // Shown unless "Who referred you to us?" is N/A.
+function referralChosen() {
+  return document.getElementById('howHeard').value === 'Referral';
+}
 function referrerContactNeeded() {
-  return !NA_ANSWER.test(referredByEl.value);
+  return referralChosen() && !NA_ANSWER.test(referredByEl.value);
 }
 
 [nameEl, streetEl, cityEl, zipEl, referredByEl].forEach(function (el) {
@@ -680,7 +688,9 @@ function validateForm() {
   if (!phoneOk) missing.push('Phone');
   if (!document.getElementById('timeframe').value) missing.push('Timeframe to Buy');
   if (!document.getElementById('howHeard').value) missing.push('How did you hear');
-  if (!referredByEl.value.trim()) missing.push('Who referred you (or N/A)');
+  var showReferrer = referralChosen();
+  document.getElementById('referrerGroup').style.display = showReferrer ? 'block' : 'none';
+  if (showReferrer && !referredByEl.value.trim()) missing.push('Who referred you (or N/A)');
   // 2026-10-05, per Durand: the referrer's cell and email, N/A accepted.
   var needReferrer = referrerContactNeeded();
   referrerContactEl.style.display = needReferrer ? 'block' : 'none';
@@ -751,7 +761,7 @@ submitBtn.addEventListener('click', function () {
     propertyAddress: streetEl.value + ', ' + cityEl.value + ', ' + stateEl.value + ' ' + zipEl.value,
     timeframe: document.getElementById('timeframe').value,
     howHeard: document.getElementById('howHeard').value,
-    referredBy: referredByEl.value,
+    referredBy: referralChosen() ? referredByEl.value : 'N/A',
     // 2026-10-05, per Durand: '' when the referrer is N/A (the boxes are
     // hidden); 'N/A' as answered; else digits / the lower-cased email.
     referredByPhone: !referrerContactNeeded() ? '' :
