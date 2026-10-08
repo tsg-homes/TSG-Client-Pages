@@ -35,8 +35,11 @@
   // Two ways in: ?t=<token> from the confirmation page and the QR, or
   // ?e=<slug>&c=<contact id>&m=<email> from the event's FUB email, where FUB
   // fills c and m from its merge fields (Durand, 2026-10-06).
+  // FUB puts the address into the link unencoded, so a '+' in it (name+tag@)
+  // arrives as a space; an email never holds a space, so turn it back.
   var params = ET.param('t') ? { api: 'ticket', token: ET.param('t') }
-             : { api: 'ticket', slug: ET.param('e'), contact: ET.param('c'), email: ET.param('m') };
+             : { api: 'ticket', slug: ET.param('e'), contact: ET.param('c'),
+                 email: String(ET.param('m') || '').trim().replace(/ /g, '+') };
   function fail(text) {
     $('etLoading').classList.add('et-hidden');
     var el = $('pageLoadError');
