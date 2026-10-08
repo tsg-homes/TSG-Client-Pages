@@ -854,7 +854,7 @@
 (function () {
   var q = new URLSearchParams(window.location.search);
   document.documentElement.classList.add('tsg-init'); // 2026-10-06 (redteam UX): visible loading state until page.init answers
-  window.PAGE_VERSION = "2026-10-06.2";
+  window.PAGE_VERSION = "2026-10-08";
   var body = { action: 'page.init', form: "buyer-seller", qatest: q.get('qatest') || '', website: '', pageVersion: window.PAGE_VERSION };
   // 2026-10-06 (redteam #8): the shared notice says "you can still sign in",
   // which is true for a page served by Apps Script (only the agent list was

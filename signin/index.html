@@ -213,6 +213,13 @@
   #successBox h2 { color: var(--good); font-size: 26px; }
   #successBox:focus { outline: 3px solid var(--good); outline-offset: 2px; }
   #missingHint { text-align: center; }
+  /* 2026-10-08: the agent setup gate and the house banner. */
+  #setupGate { text-align: center; padding: var(--space-8) var(--space-5); border: 2px solid var(--heading); border-radius: var(--radius-md); }
+  #setupGate h2 { margin: 0 0 var(--space-2); color: var(--heading); font-size: 22px; }
+  #setupGate p { color: var(--ink-2); }
+  #setupLink { display: inline-block; text-decoration: none; margin: var(--space-3) 0; }
+  .house-line { margin: 0; font-size: 18px; color: var(--heading); }
+  #changeSetupWrap { text-align: center; margin-top: var(--space-6); }
 </style>
 <meta name="tsg-hosted-page" content="built from tsg-client-forms by tools/build-site.js; backend https://script.google.com/macros/s/AKfycby9oMzIXMySG6s9qBf1r17gHML4zgtrxOPVt2uAMWvshjPlHDcouDMUITo6hm4Sa-C_lA/exec">
 </head>
@@ -239,47 +246,31 @@
   </div>
 </header>
 <main class="tsg-page">
+  <!-- 2026-10-08, per Durand: shown until an agent has set up this open house
+       (agent, listing client and FUB deal, on the signed-in Generate-a-Custom-Link
+       page). The setup comes back here as ?agent=&address= and is kept on this
+       device for the rest of the day, so every visitor skips the address. -->
+  <div id="setupGate" class="field" style="display:none;">
+    <h2>This open house isn't set up yet</h2>
+    <p>Agent: pick yourself, the listing client and their FUB deal. The sign-in page then opens ready for visitors, with the address filled in.</p>
+    <a id="setupLink" class="tsg-btn tsg-btn--submit" href="#" target="_blank" rel="noopener">Set Up This Open House</a>
+    <p class="hint">Opens TSG's Generate-a-Custom-Link page. You need to be signed in with your TSG Google account.</p>
+  </div>
+
   <div id="formWrap">
     <form id="signInForm" class="tsg-form" novalidate>
       <input type="text" id="website" name="website" autocomplete="off" tabindex="-1" aria-hidden="true">
 
-      <!-- 2026-10-05, per Durand (live QA): every question here is required.
-           Each dropdown starts on a blank "Select…" that must be changed and
-           carries an N/A option; free-text boxes accept "N/A" typed. -->
-      <p class="tsg-intro">Every question is required (<span class="req">*</span>). If one doesn't apply, choose or type N/A.</p>
-      <div class="tsg-section"><h2 class="tsg-section__label">Open House Details</h2></div>
-      <div class="field">
-        <label class="qlabel" for="hostingAgent">Hosting Agent <span class="req">*</span></label>
-        <!-- 2026-09-07, per Durand: the hardcoded 6-name <option> list was
-             removed. The options are now built at page load from
-             AGENT_LIST, which doGet fills from FUB's own user roster (see
-             getAgentList in Code.gs), so this dropdown can't drift from
-             who's actually active in FUB. Only the blank option is markup;
-             if the roster fetch fails, AGENT_LIST is [] and the field
-             simply stays on "Select one" instead of erroring. -->
-        <!-- 2026-10-05: roster agents are inserted above "Not sure / N/A".
-             Chelsey Stiles is never in the roster (FORM_EXCLUDED_AGENT_IDS in
-             Code.gs) and is never re-added from an ?agent= link. -->
-        <select id="hostingAgent">
-          <option value="">Select…</option>
-          <option value="N/A" id="hostingAgentNa">Not sure / N/A</option>
-        </select>
+      <!-- 2026-10-08, per Durand: only name, email, phone and the consent box
+           are required; everything else is optional. The hosting agent and the
+           property address are no longer questions: the agent sets the open
+           house up first (see #setupGate) and visitors only see #houseBanner. -->
+      <div id="houseBanner" class="field">
+        <div class="tsg-section"><h2 class="tsg-section__label">Open House</h2></div>
+        <p class="house-line"><strong id="houseAddress"></strong></p>
+        <p class="hint" id="houseAgentLine"></p>
       </div>
-      <!-- 2026-10-05, per Durand (live QA): street, city, state and ZIP, all
-           required. An ?address= link is split into the four boxes. This is
-           the house being visited, so it is not written to the visitor's own
-           FUB address (see buildOpenHousePersonPayload). -->
-      <div class="field">
-        <label class="qlabel" for="propertyStreet">Property Address <span class="req">*</span></label>
-        <div class="tsg-addr">
-          <input type="text" id="propertyStreet" class="tsg-addr__street" placeholder="Street address" aria-label="Street address">
-          <input type="text" id="propertyCity" class="tsg-addr__city" placeholder="City" aria-label="City">
-          <input type="text" id="propertyState" class="tsg-addr__state" placeholder="State" aria-label="State" maxlength="2">
-          <input type="text" id="propertyZip" class="tsg-addr__zip" placeholder="ZIP" aria-label="ZIP code" inputmode="numeric" maxlength="10">
-        </div>
-        <div class="hint hint--err" id="addrErr"></div>
-      </div>
-
+      <p class="tsg-intro">Name, email, phone and the consent box are required (<span class="req">*</span>). Everything else is optional.</p>
       <div class="tsg-section"><h2 class="tsg-section__label">Your Info</h2></div>
       <div class="field">
         <label class="qlabel" for="visitorName">Full Name <span class="req">*</span></label>
@@ -299,7 +290,7 @@
 
       <div class="tsg-section"><h2 class="tsg-section__label">About Your Visit</h2></div>
       <div class="field">
-        <label class="qlabel" for="timeframe">Timeframe to Buy <span class="req">*</span></label>
+        <label class="qlabel" for="timeframe">Timeframe to Buy</label>
         <!-- 2026-09-07, per Durand: same treatment as Hosting Agent above.
              These labels used to be a hardcoded copy of Code.gs's
              TIMEFRAME_IDS keys that had to match it character for
@@ -309,12 +300,10 @@
              background note are unchanged. -->
         <select id="timeframe">
           <option value="">Select…</option>
-          <option value="N/A" id="timeframeNa">Not sure / N/A</option>
         </select>
       </div>
       <div class="field">
-        <label class="qlabel" for="howHeard">How Did You Hear About This Open House? <span class="req">*</span></label>
-        <!-- 2026-10-05: nothing is preselected; "Select…" must be changed. -->
+        <label class="qlabel" for="howHeard">How Did You Hear About This Open House?</label>
         <select id="howHeard">
           <option value="">Select…</option>
           <option value="Zillow">Zillow</option>
@@ -323,7 +312,6 @@
           <option value="Referral">Referral</option>
           <option value="Social Media">Social Media</option>
           <option value="Other">Other</option>
-          <option value="N/A">N/A</option>
         </select>
       </div>
       <!-- 2026-10-01, per Durand: optional referrer, written to FUB's
@@ -334,34 +322,32 @@
            N/A for the referrer, which the server already treats as no referrer. -->
       <div id="referrerGroup" style="display:none">
       <div class="field">
-        <label class="qlabel" for="referredBy">Who referred you to us? <span class="req">*</span></label>
+        <label class="qlabel" for="referredBy">Who referred you to us?</label>
         <input type="text" name="referredBy" id="referredBy" maxlength="200">
-        <div class="hint">If someone sent you our way, name them so we can thank them. Otherwise enter N/A.</div>
+        <div class="hint">Name them so we can thank them.</div>
       </div>
       <!-- 2026-10-05, per Durand (live QA item 29): the referrer's cell and
-           email, so the right person is credited. Required (N/A accepted);
-           hidden while "Who referred you" is N/A. Used only to confirm the
+           email, so the right person is credited. Optional since 2026-10-08; a
+           filled-in answer must be a real phone / email. Shown once a referrer is named. Used only to confirm the
            referrer server-side -- this page never shows whether or how they
            were found. The email box is type=text so a typed N/A is allowed. -->
       <div id="referrerContact">
         <div class="field">
-          <label class="qlabel" for="referredByPhone">Referrer's Cell Phone <span class="req">*</span></label>
+          <label class="qlabel" for="referredByPhone">Referrer's Cell Phone</label>
           <input type="tel" id="referredByPhone" placeholder="(555) 555-5555" inputmode="tel" autocomplete="off">
-          <div class="hint">Enter N/A if you don't have it.</div>
           <div class="hint hint--err" id="referredByPhoneErr"></div>
         </div>
         <div class="field">
-          <label class="qlabel" for="referredByEmail">Referrer's Email <span class="req">*</span></label>
+          <label class="qlabel" for="referredByEmail">Referrer's Email</label>
           <input type="text" id="referredByEmail" inputmode="email" autocomplete="off" autocapitalize="off" spellcheck="false">
-          <div class="hint">Enter N/A if you don't have it.</div>
           <div class="hint hint--err" id="referredByEmailErr"></div>
         </div>
       </div>
       </div>
       <div class="field">
-        <label class="qlabel" for="notes">Notes <span class="req">*</span></label>
+        <label class="qlabel" for="notes">Notes</label>
         <textarea id="notes"></textarea>
-        <div class="hint">Anything the agent should know. Enter N/A if nothing.</div>
+        <div class="hint">Anything the agent should know.</div>
       </div>
 
       <div class="field">
@@ -382,13 +368,14 @@
     <p>We've sent your information to the hosting agent.</p>
     <button type="button" id="resetBtn" class="tsg-btn">Sign In Another Visitor</button>
   </div>
+  <p id="changeSetupWrap" class="hint" style="display:none;"><button type="button" id="changeSetupBtn" class="tsg-btn tsg-btn--ghost tsg-btn--sm">Agent: change open house</button></p>
 </main>
 
 <script>
 (function () {
   var q = new URLSearchParams(window.location.search);
   document.documentElement.classList.add('tsg-init'); // 2026-10-06 (redteam UX): visible loading state until page.init answers
-  window.PAGE_VERSION = "2026-10-06.2";
+  window.PAGE_VERSION = "2026-10-08";
   var body = { action: 'page.init', form: "open-house", qatest: q.get('qatest') || '', website: '', pageVersion: window.PAGE_VERSION };
   // 2026-10-06 (redteam #8): the shared notice says "you can still sign in",
   // which is true for a page served by Apps Script (only the agent list was
@@ -514,80 +501,88 @@ if (QA_TEST_TOKEN) {
   qaBannerEl.style.display = 'block';
   document.body.style.paddingTop = (qaBannerEl.offsetHeight || 40) + 'px';
 }
-// 2026-10-01: an empty roster means the FUB fetch failed on the server; say
-// so on the page (Chrome.html's notice) instead of leaving a silently empty
-// Hosting Agent dropdown.
-if (!AGENT_LIST.length) {
-  var pageLoadErrorEl = document.getElementById('pageLoadError');
-  if (pageLoadErrorEl) pageLoadErrorEl.style.display = 'block';
+// 2026-10-08, per Durand: the hosting agent and the property address are set
+// up by the agent, not asked of visitors. They arrive as ?agent=&address= from
+// the signed-in Generate-a-Custom-Link page (Deal Forms ?setup=1) and are kept
+// on this device until the end of the day, so a reload or a closed tab at the
+// door does not lose them. Nothing about a visitor is ever stored. Storage can
+// be unavailable (private mode, Apps Script's sandbox); the link alone still
+// works then.
+var AGENT_SETUP_URL = 'https://script.google.com/macros/s/AKfycbywU3ZWGPy4JAPJbzvFzUhFRMBcBFaLhepplXrDiPQn-MA0eqxNL_OqmwlBFhURT6Rr/exec?setup=1';
+var SETUP_KEY = 'tsg.openHouseSetup.v1';
+function todayKey() {
+  var d = new Date();
+  return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
 }
-
-// 2026-10-05: agents and timeframes are inserted above each dropdown's
-// "Not sure / N/A" option, which stays last.
-var hostingSel = document.getElementById('hostingAgent');
-AGENT_LIST.forEach(a => {
-  const opt = document.createElement('option');
-  opt.value = a.name;
-  opt.textContent = a.name;
-  hostingSel.insertBefore(opt, document.getElementById('hostingAgentNa'));
-});
-// 2026-10-02 (red-team): keep the ?agent=... prefill by adding it as an
-// option when the roster could not be loaded.
-// 2026-10-05, per Durand (live QA): ONLY when the roster is empty (FUB
-// unreachable). A roster that loaded but lacks the agent means they are not
-// pickable on the forms, and re-adding them from the link is exactly how an
-// old ?agent=Chelsey link kept preselecting Chelsey Stiles. The first-name
-// check mirrors FORM_EXCLUDED_AGENT_FIRST_NAMES in Code.gs for the FUB-down
-// case; the server ignores an excluded agent either way.
+function readSavedSetup() {
+  try {
+    var saved = JSON.parse(window.localStorage.getItem(SETUP_KEY) || 'null');
+    if (saved && saved.address && saved.day === todayKey()) return saved;
+  } catch (e) { /* storage unavailable */ }
+  return null;
+}
+function saveSetup(st) {
+  try { window.localStorage.setItem(SETUP_KEY, JSON.stringify({ agent: st.agent, address: st.address, day: todayKey() })); } catch (e) { /* storage unavailable */ }
+}
+function clearSavedSetup() {
+  try { window.localStorage.removeItem(SETUP_KEY); } catch (e) { /* storage unavailable */ }
+}
+// 2026-10-05, per Durand (live QA): an excluded agent (Chelsey Stiles) is
+// never the hosting agent, and while the roster loaded an off-roster name from
+// a link is dropped; the server ignores either anyway.
 var FORM_EXCLUDED_AGENT_FIRST_NAMES = ['chelsey', 'chelsea'];
-var prefillAgentFirst = String(PREFILL_AGENT || '').trim().toLowerCase().split(/\s+/)[0];
-var prefillAgentExcluded = FORM_EXCLUDED_AGENT_FIRST_NAMES.indexOf(prefillAgentFirst) !== -1;
-if (PREFILL_AGENT && !AGENT_LIST.length && !prefillAgentExcluded) {
-  const hasPrefill = Array.from(hostingSel.options).some(o => o.value === PREFILL_AGENT);
-  if (!hasPrefill) {
-    const opt = document.createElement('option');
-    opt.value = PREFILL_AGENT;
-    opt.textContent = PREFILL_AGENT;
-    hostingSel.insertBefore(opt, document.getElementById('hostingAgentNa'));
+function cleanSetupAgent(name) {
+  name = collapseSpaces(name);
+  if (!name) return '';
+  if (FORM_EXCLUDED_AGENT_FIRST_NAMES.indexOf(name.toLowerCase().split(' ')[0]) !== -1) return '';
+  if (AGENT_LIST.length && !AGENT_LIST.some(function (a) { return a.name === name; })) return '';
+  return name;
+}
+var setup = null;
+if (collapseSpaces(PREFILL_ADDRESS)) {
+  setup = { agent: cleanSetupAgent(PREFILL_AGENT), address: collapseSpaces(PREFILL_ADDRESS) };
+  saveSetup(setup);
+} else {
+  setup = readSavedSetup();
+  if (setup) setup.agent = cleanSetupAgent(setup.agent);
+}
+var setupGateEl = document.getElementById('setupGate');
+var setupLinkEl = document.getElementById('setupLink');
+setupLinkEl.href = AGENT_SETUP_URL;
+function showSetupState() {
+  var ready = !!(setup && setup.address);
+  setupGateEl.style.display = ready ? 'none' : 'block';
+  document.getElementById('formWrap').classList.toggle('hidden', !ready);
+  document.getElementById('changeSetupWrap').style.display = ready ? 'block' : 'none';
+  if (ready) {
+    document.getElementById('houseAddress').textContent = setup.address;
+    document.getElementById('houseAgentLine').textContent = setup.agent ? 'Hosted by ' + setup.agent : '';
   }
 }
+document.getElementById('changeSetupBtn').addEventListener('click', function () {
+  if (!window.confirm('Clear this open house from this device? An agent will need to set it up again.')) return;
+  clearSavedSetup();
+  setup = null;
+  document.getElementById('successBox').style.display = 'none';
+  showSetupState();
+});
+
+// 2026-10-05: timeframes are inserted after "Select…". (2026-10-08: the
+// "Not sure / N/A" options are gone; a blank answer means no answer.)
 TIMEFRAME_LIST.forEach(t => {
   const opt = document.createElement('option');
   opt.value = t.name;
   opt.textContent = t.name;
-  document.getElementById('timeframe').insertBefore(opt, document.getElementById('timeframeNa'));
+  document.getElementById('timeframe').appendChild(opt);
 });
 
-// Must run AFTER the options above are appended -- setting .value on a
-// <select> that doesn't yet contain a matching <option> silently does
-// nothing, so a ?agent=... prefill would have been dropped if this stayed
-// where it was. 2026-10-05: only selected when it is actually an option, so
-// an excluded or off-roster ?agent= leaves "Select…" showing.
-if (PREFILL_AGENT && Array.from(hostingSel.options).some(o => o.value === PREFILL_AGENT)) {
-  hostingSel.value = PREFILL_AGENT;
-}
-
-// 2026-10-05: the property address is four boxes now. An ?address= link
-// ("123 Main St, Philadelphia, PA 19103") is split into them; anything that
-// doesn't split cleanly goes into the street box for the visitor to finish.
-var streetEl = document.getElementById('propertyStreet');
-var cityEl = document.getElementById('propertyCity');
-var stateEl = document.getElementById('propertyState');
-var zipEl = document.getElementById('propertyZip');
-function fillAddressFromLine(line) {
+// The setup address ("123 Main St, Philadelphia, PA 19103") is split into the
+// four parts the server checks; one that does not split is sent as one line.
+function splitAddress(line) {
   line = collapseSpaces(line);
-  if (!line) return;
-  var mm = line.match(/^(.+?),\s*([^,]+?),\s*([A-Za-z]{2})\.?(?:\s+(\d{5}(?:-\d{4})?))?(?:\s*,?\s*(?:USA?|United States))?$/i);
-  if (mm) {
-    streetEl.value = mm[1];
-    cityEl.value = mm[2];
-    stateEl.value = mm[3].toUpperCase();
-    zipEl.value = mm[4] || '';
-  } else {
-    streetEl.value = line;
-  }
+  var mm = line.match(/^(.+?),\s*([^,]+?),\s*([A-Za-z]{2})\.?\s+(\d{5}(?:-\d{4})?)(?:\s*,?\s*(?:USA?|United States))?$/i);
+  return mm ? { street: mm[1], city: mm[2], state: mm[3].toUpperCase(), zip: mm[4] } : null;
 }
-fillAddressFromLine(PREFILL_ADDRESS);
 
 var nameEl = document.getElementById('visitorName');
 var emailEl = document.getElementById('email');
@@ -652,18 +647,18 @@ referredByPhoneEl.addEventListener('blur', function () {
   validateForm();
 });
 
-// Shown unless "Who referred you to us?" is N/A.
+// The referrer questions show when "Referral" is chosen; the cell and email
+// once a referrer is named.
 function referralChosen() {
   return document.getElementById('howHeard').value === 'Referral';
 }
 function referrerContactNeeded() {
-  return referralChosen() && !NA_ANSWER.test(referredByEl.value);
+  return referralChosen() && !!referredByEl.value.trim() && !NA_ANSWER.test(referredByEl.value);
 }
 
-[nameEl, streetEl, cityEl, zipEl, referredByEl].forEach(function (el) {
+[nameEl, referredByEl].forEach(function (el) {
   el.addEventListener('blur', function () { this.value = collapseSpaces(this.value); validateForm(); });
 });
-stateEl.addEventListener('blur', function () { this.value = collapseSpaces(this.value).toUpperCase(); validateForm(); });
 
 emailEl.addEventListener('blur', function () { this.value = this.value.trim().toLowerCase(); validateForm(); });
 document.getElementById('notes').addEventListener('blur', function () { this.value = this.value.trim(); });
@@ -675,47 +670,37 @@ function validateForm() {
   var phoneDigits = digitsOnly(phoneEl.value);
   var phoneOk = phoneDigits.length >= 10 && phoneDigits.length <= 15;
   var consentOk = consentEl.checked;
-  // 2026-10-05, per Durand (live QA): every other question is required too
-  // (N/A accepted), and the address must be complete. The same rules are
-  // re-checked on the server (requireAnswers_ / requireFullAddress_).
-  var addrOk = streetEl.value.trim() && cityEl.value.trim() &&
-    /^[A-Za-z]{2}$/.test(stateEl.value.trim()) && /^\d{5}(-\d{4})?$/.test(zipEl.value.trim());
+  // 2026-10-08, per Durand: only name, email, phone and consent are required.
+  // The referrer's cell and email are optional, but one that is filled in must
+  // be a real phone / email (N/A still accepted). The server re-checks.
   var missing = [];
-  if (!hostingSel.value) missing.push('Hosting Agent');
-  if (!addrOk) missing.push('Property Address (street, city, state, ZIP)');
   if (!nameOk) missing.push('Full Name');
   if (!emailOk) missing.push('Email');
   if (!phoneOk) missing.push('Phone');
-  if (!document.getElementById('timeframe').value) missing.push('Timeframe to Buy');
-  if (!document.getElementById('howHeard').value) missing.push('How did you hear');
   var showReferrer = referralChosen();
   document.getElementById('referrerGroup').style.display = showReferrer ? 'block' : 'none';
-  if (showReferrer && !referredByEl.value.trim()) missing.push('Who referred you (or N/A)');
-  // 2026-10-05, per Durand: the referrer's cell and email, N/A accepted.
   var needReferrer = referrerContactNeeded();
   referrerContactEl.style.display = needReferrer ? 'block' : 'none';
   var refPhoneVal = referredByPhoneEl.value.trim();
   var refPhoneDigits = digitsOnly(refPhoneVal);
-  var refPhoneOk = NA_ANSWER.test(refPhoneVal) || (refPhoneDigits.length >= 10 && refPhoneDigits.length <= 15);
+  var refPhoneOk = !refPhoneVal || NA_ANSWER.test(refPhoneVal) || (refPhoneDigits.length >= 10 && refPhoneDigits.length <= 15);
   var refEmailVal = referredByEmailEl.value.trim();
-  var refEmailOk = NA_ANSWER.test(refEmailVal) || EMAIL_PATTERN.test(refEmailVal);
-  if (needReferrer && !refPhoneOk) missing.push("Referrer's cell phone (or N/A)");
-  if (needReferrer && !refEmailOk) missing.push("Referrer's email (or N/A)");
-  document.getElementById('referredByPhoneErr').textContent = (needReferrer && !refPhoneOk && refPhoneVal.length > 0) ? 'Enter a 10-digit phone number, or N/A.' : '';
-  document.getElementById('referredByEmailErr').textContent = (needReferrer && !refEmailOk && refEmailVal.length > 0) ? 'Enter a valid email address, or N/A.' : '';
-  if (!document.getElementById('notes').value.trim()) missing.push('Notes (or N/A)');
+  var refEmailOk = !refEmailVal || NA_ANSWER.test(refEmailVal) || EMAIL_PATTERN.test(refEmailVal);
+  if (needReferrer && !refPhoneOk) missing.push("a valid referrer's cell phone (or leave it blank)");
+  if (needReferrer && !refEmailOk) missing.push("a valid referrer's email (or leave it blank)");
+  document.getElementById('referredByPhoneErr').textContent = (needReferrer && !refPhoneOk) ? 'Enter a 10-digit phone number, or leave it blank.' : '';
+  document.getElementById('referredByEmailErr').textContent = (needReferrer && !refEmailOk) ? 'Enter a valid email address, or leave it blank.' : '';
   if (!consentOk) missing.push('the consent box');
 
   document.getElementById('nameErr').textContent = (!nameOk && nameEl.value.length > 0) ? 'Name is required.' : '';
   document.getElementById('emailErr').textContent = (!emailOk && emailEl.value.length > 0) ? 'Enter a valid email address (e.g. name@example.com).' : '';
   document.getElementById('phoneErr').textContent = (!phoneOk && phoneEl.value.length > 0) ? 'Enter a valid 10-digit phone number.' : '';
-  document.getElementById('addrErr').textContent = (!addrOk && (stateEl.value || zipEl.value)) ? 'Enter the street, city, 2-letter state and 5-digit ZIP.' : '';
   document.getElementById('missingHint').textContent = missing.length ? 'Still needed: ' + missing.join(', ') + '.' : '';
 
   submitBtn.disabled = missing.length > 0;
 }
 
-[hostingSel, document.getElementById('timeframe'), document.getElementById('howHeard'), streetEl, cityEl, stateEl, zipEl,
+[document.getElementById('timeframe'), document.getElementById('howHeard'),
   referredByEl, referredByPhoneEl, referredByEmailEl, document.getElementById('notes')].forEach(function (el) {
   el.addEventListener('input', validateForm);
   el.addEventListener('change', validateForm);
@@ -725,6 +710,7 @@ function validateForm() {
   el.addEventListener('input', validateForm);
   el.addEventListener('change', validateForm);
 });
+showSetupState(); // 2026-10-08: the setup gate until an agent has set up this open house
 validateForm(); // 2026-10-06 (re-test C #36): say at load why the button is off, before the visitor types
 
 submitBtn.addEventListener('click', function () {
@@ -732,14 +718,14 @@ submitBtn.addEventListener('click', function () {
   // field was edited after its own blur/change fired.
   nameEl.value = collapseSpaces(nameEl.value);
   emailEl.value = emailEl.value.trim().toLowerCase();
-  [streetEl, cityEl, zipEl].forEach(function (el) { el.value = collapseSpaces(el.value); });
-  stateEl.value = collapseSpaces(stateEl.value).toUpperCase();
   referredByEl.value = collapseSpaces(referredByEl.value);
   referredByEmailEl.value = referredByEmailEl.value.trim().toLowerCase();
   document.getElementById('notes').value = document.getElementById('notes').value.trim();
 
   validateForm();
   if (submitBtn.disabled) return;
+  if (!setup || !setup.address) { showSetupState(); return; }
+  var addrParts = splitAddress(setup.address) || { street: '', city: '', state: '', zip: '' };
 
   submitBtn.disabled = true;
   submitBtn.textContent = 'Signing In...';
@@ -752,21 +738,22 @@ submitBtn.addEventListener('click', function () {
     visitorName: nameEl.value,
     email: emailEl.value,
     phone: digitsOnly(phoneEl.value),
-    hostingAgent: hostingSel.value,
-    // 2026-10-05: the four parts, plus the one line older code reads.
-    propertyStreet: streetEl.value,
-    propertyCity: cityEl.value,
-    propertyState: stateEl.value,
-    propertyZip: zipEl.value,
-    propertyAddress: streetEl.value + ', ' + cityEl.value + ', ' + stateEl.value + ' ' + zipEl.value,
+    // 2026-10-08, per Durand: the agent and the house come from the setup;
+    // an unanswered optional question is sent blank.
+    hostingAgent: setup.agent || '',
+    propertyStreet: addrParts.street,
+    propertyCity: addrParts.city,
+    propertyState: addrParts.state,
+    propertyZip: addrParts.zip,
+    propertyAddress: setup.address,
     timeframe: document.getElementById('timeframe').value,
     howHeard: document.getElementById('howHeard').value,
-    referredBy: referralChosen() ? referredByEl.value : 'N/A',
-    // 2026-10-05, per Durand: '' when the referrer is N/A (the boxes are
-    // hidden); 'N/A' as answered; else digits / the lower-cased email.
-    referredByPhone: !referrerContactNeeded() ? '' :
+    referredBy: referralChosen() ? referredByEl.value : '',
+    // '' when no referrer is named or the box was left blank; 'N/A' as
+    // answered; else digits / the lower-cased email.
+    referredByPhone: !referrerContactNeeded() || !referredByPhoneEl.value.trim() ? '' :
       (NA_ANSWER.test(referredByPhoneEl.value) ? 'N/A' : digitsOnly(referredByPhoneEl.value)),
-    referredByEmail: !referrerContactNeeded() ? '' :
+    referredByEmail: !referrerContactNeeded() || !referredByEmailEl.value.trim() ? '' :
       (NA_ANSWER.test(referredByEmailEl.value) ? 'N/A' : referredByEmailEl.value.trim().toLowerCase()),
     followUpConsent: consentEl.checked ? 'Yes' : 'No',
     notes: document.getElementById('notes').value
