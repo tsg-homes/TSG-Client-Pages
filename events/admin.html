@@ -171,9 +171,37 @@
     return ET.pill('neutral', 'Archived', 'Hidden and finished.');
   }
 
+  // Agent invite links (Durand, 2026-10-08). Each agent sends their own link;
+  // the event page then shows them and the RSVP is assigned to them in FUB
+  // when the contact has no agent yet.
+  var agents = [];
+  function inviteUrl(slug, a) {
+    return new URL('event.html?e=' + encodeURIComponent(slug) + '&a=' + encodeURIComponent(a), ET.siteUrl()).href;
+  }
+  function toggleLinks(slug) {
+    var box = document.querySelector('[data-links-for="' + slug + '"]');
+    if (!box) return;
+    if (!box.classList.contains('et-hidden')) { box.classList.add('et-hidden'); return; }
+    box.innerHTML = agents.length ? agents.map(function (a) {
+      var url = inviteUrl(slug, a.slug);
+      return '<div class="et-link"><span class="et-link__name">' + ET.esc(a.name) + '</span>' +
+        '<input type="text" readonly value="' + ET.esc(url) + '" aria-label="Invite link for ' + ET.esc(a.name) + '">' +
+        '<button type="button" class="tsg-btn tsg-btn--sm tsg-btn--ghost" data-copy="' + ET.esc(url) + '" title="Copies ' + ET.esc(a.name) + '\'s invite link.">Copy</button></div>';
+    }).join('') : '<p class="et-note">No agents are set up in the app\'s config.</p>';
+    box.classList.remove('et-hidden');
+    Array.prototype.forEach.call(box.querySelectorAll('[data-copy]'), function (b) {
+      b.addEventListener('click', function () {
+        var done = function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); };
+        if (navigator.clipboard) navigator.clipboard.writeText(b.getAttribute('data-copy')).then(done, function () { b.previousSibling.select(); });
+        else { b.previousSibling.select(); }
+      });
+    });
+  }
+
   function loadList() {
     return ET.api({ api: 'events', adminKey: key() }).then(function (r) {
       if (!r || !r.ok) { throw new Error((r && r.error) || 'Could not load events.'); }
+      agents = r.agents || [];
       events = r.events.slice().sort(function (a, b) { return String(b.startsAt).localeCompare(String(a.startsAt)); });
       $('etKeySection').classList.add('et-hidden');
       $('etListSection').classList.remove('et-hidden');
@@ -185,8 +213,13 @@
           '<div class="et-row" style="margin:0">' + statusPill(e.status) +
           ' <a class="tsg-btn tsg-btn--sm tsg-btn--ghost" href="event.html?e=' + encodeURIComponent(e.slug) + '" target="_blank" rel="noopener" title="Opens the public event page in a new tab.">Public page</a>' +
           ' <a class="tsg-btn tsg-btn--sm tsg-btn--ghost" href="checkin.html?event=' + encodeURIComponent(e.id) + '" title="Opens the roster and check-in page for this event.">Roster</a>' +
-          ' <button type="button" class="tsg-btn tsg-btn--sm" data-edit="' + ET.esc(e.id) + '" title="Opens this event in the editor below.">Edit</button></div></div>';
+          ' <button type="button" class="tsg-btn tsg-btn--sm tsg-btn--ghost" data-links="' + ET.esc(e.slug) + '" title="Shows each agent\'s own invite link for this event. A guest who RSVPs through it sees that agent and is assigned to them in Follow Up Boss if they have no agent yet.">Agent links</button>' +
+          ' <button type="button" class="tsg-btn tsg-btn--sm" data-edit="' + ET.esc(e.id) + '" title="Opens this event in the editor below.">Edit</button></div>' +
+          '<div class="et-links et-hidden" data-links-for="' + ET.esc(e.slug) + '"></div></div>';
       }).join('');
+      Array.prototype.forEach.call(document.querySelectorAll('[data-links]'), function (b) {
+        b.addEventListener('click', function () { toggleLinks(b.getAttribute('data-links')); });
+      });
       Array.prototype.forEach.call(document.querySelectorAll('[data-edit]'), function (b) {
         b.addEventListener('click', function () { openEditor(b.getAttribute('data-edit')); });
       });

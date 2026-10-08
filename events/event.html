@@ -26,6 +26,7 @@
 <main class="tsg-page">
   <div class="et-grid">
     <section>
+      <div id="etInvite" class="et-hidden"></div>
       <div class="tsg-section tsg-section--rule"><h2 class="tsg-section__label">Details</h2></div>
       <div class="et-card">
         <dl class="et-facts">
@@ -89,6 +90,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var slug = ET.param('e');
   var ev = null;
+  var agentSlug = '';
   var loadedAt = Date.now();
 
   function fail(text) {
@@ -148,7 +150,7 @@
       action: 'rsvp', slug: slug,
       name: $('name').value, email: $('email').value, phone: $('phone').value,
       guestCount: $('guestCount').value, consent: $('consent').checked,
-      website: $('website').value, fillMs: Date.now() - loadedAt
+      website: $('website').value, fillMs: Date.now() - loadedAt, agent: agentSlug
     }).then(function (r) {
       btn.disabled = false; btn.textContent = 'RSVP';
       if (!r || !r.ok) { ET.showMessage(msg, 'err', (r && r.error) || 'The RSVP could not be saved. Please try again.'); return; }
@@ -169,10 +171,15 @@
   if (!slug) { fail('This link is missing the event. Ask the host for the event link.'); return; }
   ET.initQa().then(function () {
     ET.showQaBanner();
-    return ET.api({ api: 'event', slug: slug });
+    return ET.api({ api: 'event', slug: slug, a: ET.param('a') });
   }).then(function (r) {
     if (!r || !r.ok) { fail((r && r.error) || 'This event could not be loaded.'); return; }
     ev = r.event;
+    if (r.agent) {
+      agentSlug = r.agent.slug;
+      $('etInvite').innerHTML = '<div class="et-card et-invite">' + ET.agentHtml(r.agent, 'You are invited by') + '</div>';
+      $('etInvite').classList.remove('et-hidden');
+    }
     fillGuests(10);
     render();
     $('etForm').addEventListener('submit', submit);

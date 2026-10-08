@@ -123,6 +123,7 @@
       '<p class="et-result__name">' + ET.esc(t.name) + '</p>' +
       '<p class="et-ticket__meta">' + ET.esc(t.guestCount) + (t.guestCount === 1 ? ' guest' : ' guests') + ', including them' +
       (t.qaTest ? ' (rehearsal ticket)' : '') + '</p>' +
+      (t.agent ? '<p class="et-ticket__meta">Agent: ' + ET.esc(t.agent.name) + '</p>' : '') +
       (r.already && t.checkedInAt ? '<p class="et-note">First checked in ' + ET.esc(new Date(t.checkedInAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })) + '.</p>' : '') +
       (t.status === 'checked_in'
         ? '<p><button type="button" class="tsg-btn tsg-btn--sm tsg-btn--ghost" data-undo="' + ET.esc(t.token) + '" title="Reverses this check-in, for a scan made by mistake.">Undo check-in</button></p>'
@@ -142,12 +143,14 @@
     var q = $('etSearch').value.trim().toLowerCase();
     var shown = rows.filter(function (r) {
       if (!q) return true;
-      return (r.name + ' ' + r.email + ' ' + r.phone).toLowerCase().indexOf(q) !== -1;
+      return (r.name + ' ' + r.email + ' ' + r.phone + ' ' + (r.agent || '') + ' ' + (r.invitedBy || '')).toLowerCase().indexOf(q) !== -1;
     }).sort(function (a, b) { return a.name.localeCompare(b.name); });
     $('etRoster').innerHTML = shown.length ? shown.map(function (r) {
       return '<div class="et-card et-rowc' + (r.status === 'checked_in' ? ' et-rowc--in' : '') + '">' +
         '<div><div class="et-rowc__name">' + ET.esc(r.name) + (r.qaTest ? ' <span class="tsg-pill tsg-pill--critical" title="A rehearsal ticket. Not counted.">Test</span>' : '') + '</div>' +
-        '<div class="et-rowc__meta">' + ET.esc(r.guestCount) + (r.guestCount === 1 ? ' guest' : ' guests') + (r.email ? ', ' + ET.esc(r.email) : '') + (r.phone ? ', ' + ET.esc(r.phone) : '') + '</div></div>' +
+        '<div class="et-rowc__meta">' + ET.esc(r.guestCount) + (r.guestCount === 1 ? ' guest' : ' guests') + (r.email ? ', ' + ET.esc(r.email) : '') + (r.phone ? ', ' + ET.esc(r.phone) : '') + '</div>' +
+        (r.agent || r.invitedBy ? '<div class="et-rowc__meta">' + (r.agent ? 'Agent: ' + ET.esc(r.agent) : '') +
+          (r.invitedBy && r.invitedBy !== r.agent ? (r.agent ? ', ' : '') + 'invited by ' + ET.esc(r.invitedBy) : '') + '</div>' : '') + '</div>' +
         '<div class="et-row" style="margin:0">' + statusPill(r) +
         (r.status === 'checked_in'
           ? ' <button type="button" class="tsg-btn tsg-btn--sm tsg-btn--ghost" data-undo="' + ET.esc(r.token) + '" title="Reverses this check-in.">Undo</button>'

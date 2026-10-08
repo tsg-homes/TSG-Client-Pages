@@ -204,3 +204,18 @@ body.et-comment-mode .et-cmt-hover { outline: 2px dashed var(--brand); outline-o
 .et-cmt-toast { position: fixed; z-index: 1001; left: 50%; bottom: 24px; transform: translateX(-50%); max-width: calc(100vw - 32px);
   background: var(--brand); color: var(--brand-ink); padding: 10px 16px; border-radius: var(--radius-md); font-size: 14px; }
 .et-cmt-toast--bad { background: var(--critical, #B3261E); color: #FFFFFF; }
+
+/* The guest's agent and invite links */
+.et-agent { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-3) 0; text-align: left; }
+.et-agent__photo, .et-agent__initials { width: 56px; height: 56px; border-radius: var(--radius-pill); flex: none; object-fit: cover; }
+.et-agent__initials { display: inline-flex; align-items: center; justify-content: center; background: var(--brand); color: var(--brand-ink); font-weight: 700; font-size: 18px; }
+.et-agent__lead { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.et-agent__name { font-size: 17px; font-weight: 700; color: var(--heading); }
+.et-invite { margin-bottom: var(--space-4); }
+.et-invite .et-agent { margin: 0; }
+.et-links { flex-basis: 100%; display: grid; gap: var(--space-2); margin-top: var(--space-2); }
+.et-link { display: grid; grid-template-columns: 160px 1fr auto; gap: var(--space-2); align-items: center; }
+.et-link__name { font-size: 14px; font-weight: 700; color: var(--ink); }
+.et-link input { font: inherit; font-size: 13px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--radius-sm); min-width: 0; background: var(--input); color: var(--ink); }
+@media (max-width: 600px) { .et-link { grid-template-columns: 1fr auto; } .et-link__name { grid-column: 1 / -1; } }
+.et-ticket .et-agent { justify-content: center; }

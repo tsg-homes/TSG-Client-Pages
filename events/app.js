@@ -117,6 +117,17 @@ window.ET = (function () {
   function hideMessage(el) { el.style.display = 'none'; }
 
   // Renders the ticket card used by the confirmation and the ticket page.
+  // The guest's agent (Durand, 2026-10-08): photo from FUB when it has one,
+  // else a badge with the initials. Only https photos are drawn.
+  function agentHtml(a, lead) {
+    if (!a || !a.name) return '';
+    var face = a.photo && /^https:\/\//.test(a.photo)
+      ? '<img class="et-agent__photo" src="' + esc(a.photo) + '" alt="" width="56" height="56" referrerpolicy="no-referrer">'
+      : '<span class="et-agent__initials" aria-hidden="true">' + esc(a.initials || '') + '</span>';
+    return '<div class="et-agent">' + face + '<div><div class="et-agent__lead">' + esc(lead) + '</div>' +
+      '<div class="et-agent__name">' + esc(a.name) + '</div></div></div>';
+  }
+
   function renderTicket(el, t) {
     var status = t.status === 'checked_in'
       ? pill('good', 'Checked in', 'This ticket was scanned at the door.')
@@ -130,6 +141,7 @@ window.ET = (function () {
         '<p class="et-ticket__meta">' + esc(t.guestCount) + (t.guestCount === 1 ? ' guest' : ' guests') + ', including you</p>' +
         '<p class="et-ticket__meta">' + esc(t.event.title) + '<br>' + esc(when(t.event.startsAt, t.event.endsAt)) +
           (t.event.venue ? '<br>' + esc(t.event.venue) : '') + '</p>' +
+        (t.agent ? agentHtml(t.agent, 'Your agent') : '') +
         '<p class="et-note">Screenshot this code or keep the link below. Staff scan it at the door.</p>' +
         '<p class="et-ticket__code"><a href="' + esc(ticketUrl(t.token)) + '" title="Opens this ticket on its own page, which you can bookmark.">Open my ticket page</a></p>' +
       '</div>';
@@ -138,5 +150,6 @@ window.ET = (function () {
 
   return { param: param, esc: esc, api: api, post: post, initQa: initQa, showQaBanner: showQaBanner,
            qaToken: qaToken, drawQr: drawQr, ticketUrl: ticketUrl, checkinUrl: checkinUrl, pill: pill,
-           showMessage: showMessage, hideMessage: hideMessage, renderTicket: renderTicket, siteUrl: siteUrl, when: when };
+           showMessage: showMessage, hideMessage: hideMessage, renderTicket: renderTicket, siteUrl: siteUrl, when: when,
+           agentHtml: agentHtml };
 })();
